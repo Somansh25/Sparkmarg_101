@@ -261,41 +261,76 @@ document.addEventListener('DOMContentLoaded', () => {
       const mainPlayer = document.getElementById('sim-player-card');
       if (!mainPlayer) return;
 
-      mainPlayer.innerHTML = `
-        <div style="text-align: center; padding: 2.5rem 1rem;" class="animate-scale-up">
-          <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
-          <h2 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">
-            Simulation Completed!
-          </h2>
-          <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto 2rem auto;">
-            You have successfully navigated all scenario nodes for <strong>${window.SparkMarg.escapeHtml(this.currentSimData.title)}</strong>.
-          </p>
+      mainPlayer.innerHTML = '';
+      const container = document.createElement('div');
+      container.style.textAlign = 'center';
+      container.style.padding = '2.5rem 1rem';
+      container.className = 'animate-scale-up';
 
-          <div class="grid grid-4" style="margin-bottom: 2rem;">
-            <div style="background: var(--bg-input); padding: 1rem; border-radius: var(--radius-md);">
-              <div style="font-size: 0.8rem; color: var(--text-muted);">Leadership</div>
-              <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">${finalScores.leadership || 0}</div>
-            </div>
-            <div style="background: var(--bg-input); padding: 1rem; border-radius: var(--radius-md);">
-              <div style="font-size: 0.8rem; color: var(--text-muted);">Technical</div>
-              <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent);">${finalScores.technical || 0}</div>
-            </div>
-            <div style="background: var(--bg-input); padding: 1rem; border-radius: var(--radius-md);">
-              <div style="font-size: 0.8rem; color: var(--text-muted);">Problem Solving</div>
-              <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);">${finalScores.problem_solving || 0}</div>
-            </div>
-            <div style="background: var(--bg-input); padding: 1rem; border-radius: var(--radius-md);">
-              <div style="font-size: 0.8rem; color: var(--text-muted);">Communication</div>
-              <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning);">${finalScores.communication || 0}</div>
-            </div>
-          </div>
+      const emoji = document.createElement('div');
+      emoji.style.fontSize = '3rem';
+      emoji.style.marginBottom = '1rem';
+      emoji.textContent = '🎉';
 
-          <div style="display: flex; gap: 1rem; justify-content: center;">
-            <a href="/catalog" class="btn btn-secondary">Explore Catalog</a>
-            <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
-          </div>
-        </div>
-      `;
+      const title = document.createElement('h2');
+      title.style.fontSize = '1.75rem';
+      title.style.fontWeight = '700';
+      title.style.color = 'var(--text-main)';
+      title.style.marginBottom = '0.5rem';
+      title.textContent = 'Simulation Completed!';
+
+      const desc = document.createElement('p');
+      desc.style.color = 'var(--text-muted)';
+      desc.style.maxWidth = '500px';
+      desc.style.margin = '0 auto 2rem auto';
+      desc.innerHTML = `You have successfully navigated all scenario nodes for <strong>${window.SparkMarg.escapeHtml(this.currentSimData.title)}</strong>.`;
+
+      const grid = document.createElement('div');
+      grid.className = 'grid grid-4';
+      grid.style.marginBottom = '2rem';
+
+      const scoreItems = [
+        { label: 'Leadership', val: finalScores.leadership || 0, color: 'var(--primary)' },
+        { label: 'Technical', val: finalScores.technical || 0, color: 'var(--accent)' },
+        { label: 'Problem Solving', val: finalScores.problem_solving || 0, color: 'var(--success)' },
+        { label: 'Communication', val: finalScores.communication || 0, color: 'var(--warning)' }
+      ];
+
+      scoreItems.forEach(item => {
+        const box = document.createElement('div');
+        box.style.background = 'var(--bg-input)';
+        box.style.padding = '1rem';
+        box.style.borderRadius = 'var(--radius-md)';
+        box.innerHTML = `
+          <div style="font-size: 0.8rem; color: var(--text-muted);">${item.label}</div>
+          <div style="font-size: 1.5rem; font-weight: 700; color: ${item.color};">${item.val}</div>
+        `;
+        grid.appendChild(box);
+      });
+
+      const btnGroup = document.createElement('div');
+      btnGroup.style.display = 'flex';
+      btnGroup.style.gap = '1rem';
+      btnGroup.style.justifyContent = 'center';
+
+      const catBtn = document.createElement('a');
+      catBtn.href = '/catalog';
+      catBtn.className = 'btn btn-secondary';
+      catBtn.textContent = 'Explore Catalog';
+
+      const dashBtn = document.createElement('a');
+      dashBtn.href = '/dashboard';
+      dashBtn.className = 'btn btn-primary';
+      dashBtn.textContent = 'Go to Dashboard';
+
+      btnGroup.appendChild(catBtn);
+      btnGroup.appendChild(dashBtn);
+      container.appendChild(emoji);
+      container.appendChild(title);
+      container.appendChild(desc);
+      container.appendChild(grid);
+      container.appendChild(btnGroup);
+      mainPlayer.appendChild(container);
     }
   };
 
