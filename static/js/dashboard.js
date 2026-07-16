@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="stream-row-meta">
             <div>
               <span class="badge d-inline-block me-2">${window.SparkMarg.escapeHtml(sim.domain)}</span>
-              <span class="stream-row-subtext">Last played ${new Date(sim.updated_at).toLocaleDateString()}</span>
+              <span class="stream-row-subtext">Last played ${window.SparkMarg.escapeHtml(new Date(sim.updated_at).toLocaleDateString())}</span>
             </div>
             <h4 class="stream-row-title mt-1">${window.SparkMarg.escapeHtml(sim.title)}</h4>
           </div>
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="catalog-card-header">
             <div>
               <h4 class="stream-row-title">${window.SparkMarg.escapeHtml(sim.title)}</h4>
-              <span class="stream-row-subtext">Completed on ${new Date(sim.completed_at).toLocaleDateString()}</span>
+              <span class="stream-row-subtext">Completed on ${window.SparkMarg.escapeHtml(new Date(sim.completed_at).toLocaleDateString())}</span>
             </div>
             <span class="badge difficulty-medium">Completed</span>
           </div>
@@ -130,19 +130,19 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="grid grid-4 score-breakdown mt-2">
             <div class="score-delta-item">
               <span class="score-delta-label">Lead</span>
-              <strong class="text-success">+${sim.scores.leadership || 0}</strong>
+              <strong class="text-success">+${window.SparkMarg.escapeHtml(String(sim.scores.leadership || 0))}</strong>
             </div>
             <div class="score-delta-item">
               <span class="score-delta-label">Tech</span>
-              <strong class="text-primary">+${sim.scores.technical || 0}</strong>
+              <strong class="text-primary">+${window.SparkMarg.escapeHtml(String(sim.scores.technical || 0))}</strong>
             </div>
             <div class="score-delta-item">
               <span class="score-delta-label">Prob</span>
-              <strong class="text-success">+${sim.scores.problem_solving || 0}</strong>
+              <strong class="text-success">+${window.SparkMarg.escapeHtml(String(sim.scores.problem_solving || 0))}</strong>
             </div>
             <div class="score-delta-item">
               <span class="score-delta-label">Comm</span>
-              <strong class="text-primary">+${sim.scores.communication || 0}</strong>
+              <strong class="text-primary">+${window.SparkMarg.escapeHtml(String(sim.scores.communication || 0))}</strong>
             </div>
           </div>
         </div>
