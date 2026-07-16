@@ -40,16 +40,28 @@ window.SparkMarg = {
     const navUserContainer = document.getElementById('nav-user-section');
     if (!navUserContainer) return;
 
-    navUserContainer.innerHTML = `
-      <div class="user-menu" style="display: flex; align-items: center; gap: 0.75rem;">
-        <span style="font-weight: 500; color: var(--text-main); font-size: 0.9rem;">
-          ${this.escapeHtml(user.full_name || 'User')}
-        </span>
-        <button id="logout-btn" class="btn btn-outline btn-sm">Logout</button>
-      </div>
-    `;
+    navUserContainer.innerHTML = '';
+    const menuDiv = document.createElement('div');
+    menuDiv.className = 'user-menu';
+    menuDiv.style.display = 'flex';
+    menuDiv.style.alignItems = 'center';
+    menuDiv.style.gap = '0.75rem';
 
-    document.getElementById('logout-btn')?.addEventListener('click', () => this.logout());
+    const nameSpan = document.createElement('span');
+    nameSpan.style.fontWeight = '500';
+    nameSpan.style.color = 'var(--text-main)';
+    nameSpan.style.fontSize = '0.9rem';
+    nameSpan.textContent = user.full_name || 'User';
+
+    const logoutBtn = document.createElement('button');
+    logoutBtn.id = 'logout-btn';
+    logoutBtn.className = 'btn btn-outline btn-sm';
+    logoutBtn.textContent = 'Logout';
+    logoutBtn.addEventListener('click', () => this.logout());
+
+    menuDiv.appendChild(nameSpan);
+    menuDiv.appendChild(logoutBtn);
+    navUserContainer.appendChild(menuDiv);
   },
 
   /**
