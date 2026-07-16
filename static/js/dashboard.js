@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <h4 class="stream-row-title mt-1">${window.SparkMarg.escapeHtml(sim.title)}</h4>
           </div>
-          <a href="/simulation?id=${sim.simulation_id}" class="btn btn-primary btn-sm">Resume</a>
+          <a href="/simulation?id=${window.SparkMarg.escapeHtml(sim.simulation_id)}" class="btn btn-primary btn-sm">Resume</a>
         </div>
       `).join('');
     },
