@@ -334,9 +334,4 @@ const simPlayer = {
     }
 };
 
-<<<<<<< HEAD
 export default simPlayer;
-=======
-  simPlayer.init();
-});
->>>>>>> de69205539d9494664d09521846b8b2bb4fe602e

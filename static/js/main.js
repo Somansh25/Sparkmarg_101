@@ -223,7 +223,6 @@ window.SparkMarg = {
       menuDiv.style.alignItems = 'center';
       menuDiv.style.gap = '0.75rem';
 
-<<<<<<< HEAD
       const nameSpan = document.createElement('span');
       nameSpan.style.fontWeight = '500';
       nameSpan.style.color = 'var(--text-main)';
@@ -250,30 +249,6 @@ window.SparkMarg = {
       const nameDisplay = document.getElementById('user-name');
       if (nameDisplay) nameDisplay.textContent = user.full_name || 'User';
     }
-=======
-    navUserContainer.innerHTML = '';
-    const menuDiv = document.createElement('div');
-    menuDiv.className = 'user-menu';
-    menuDiv.style.display = 'flex';
-    menuDiv.style.alignItems = 'center';
-    menuDiv.style.gap = '0.75rem';
-
-    const nameSpan = document.createElement('span');
-    nameSpan.style.fontWeight = '500';
-    nameSpan.style.color = 'var(--text-main)';
-    nameSpan.style.fontSize = '0.9rem';
-    nameSpan.textContent = user.full_name || 'User';
-
-    const logoutBtn = document.createElement('button');
-    logoutBtn.id = 'logout-btn';
-    logoutBtn.className = 'btn btn-outline btn-sm';
-    logoutBtn.textContent = 'Logout';
-    logoutBtn.addEventListener('click', () => this.logout());
-
-    menuDiv.appendChild(nameSpan);
-    menuDiv.appendChild(logoutBtn);
-    navUserContainer.appendChild(menuDiv);
->>>>>>> de69205539d9494664d09521846b8b2bb4fe602e
   },
 
   /**
@@ -583,7 +558,6 @@ window.SparkMarg = {
   }
 };
 
-<<<<<<< HEAD
 document.addEventListener('DOMContentLoaded', () => { 
   window.SparkMarg.init();
 
@@ -600,6 +574,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
-=======
-document.addEventListener('DOMContentLoaded', () => { window.SparkMarg.init(); });
->>>>>>> de69205539d9494664d09521846b8b2bb4fe602e
