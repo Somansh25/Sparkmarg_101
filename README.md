@@ -28,7 +28,7 @@ sparkmarg/
 ├── auth.py                     # JWT authentication & password hashing
 ├── db.py                       # MongoDB connection & Pydantic models
 ├── main.py                     # Entry point & FastAPI route handlers
-├── seed.py                     # Database seeding script
+├── seed_data.py                     # Database seeding script
 ├── README.md                   # Documentation
 └── requirements.txt            # Python dependencies
 ```
@@ -66,7 +66,7 @@ ALLOWED_ORIGINS="http://localhost:8000,[http://127.0.0.1:8000](http://127.0.0.1:
 Populate MongoDB with default simulations and scenario nodes:
 
 ```bash
-python3 seed.py
+python3 seed_data.py
 ```
 5. Start the Application
 ```bash

@@ -2,8 +2,7 @@
    SparkMarg Analytics & Progress Dashboard Engine
    ===================================================================== */
 
-document.addEventListener('DOMContentLoaded', () => {
-  const dashboardController = {
+const dashboardController = {
     userStats: null,
     inProgressSims: [],
     completedSims: [],
@@ -13,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     async init() {
       if (!localStorage.getItem('access_token')) {
-         window.location.href = '/login';
+         window.SparkMarg.navigateTo('login');
          return;
       }
       await this.loadDashboardData();
@@ -40,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (error) {
         if (error.message.includes('401') || error.message.includes('status: 401')) {
             localStorage.removeItem('access_token');
-            window.location.href = '/login';
+            window.SparkMarg.navigateTo('login');
             return;
         }
         window.SparkMarg.showAlert(`Failed to populate dashboard: ${error.message}`, 'danger');
@@ -96,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <h4 class="stream-row-title mt-1">${window.SparkMarg.escapeHtml(sim.title)}</h4>
           </div>
-          <a href="/simulation?id=${window.SparkMarg.escapeHtml(sim.simulation_id)}" class="btn btn-primary btn-sm">Resume</a>
+          <a href="javascript:void(0)" onclick="window.SparkMarg.navigateTo('simulation?id=${window.SparkMarg.escapeHtml(sim.simulation_id)}')" class="btn btn-primary btn-sm">Resume</a>
         </div>
       `).join('');
     },
@@ -130,25 +129,24 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="grid grid-4 score-breakdown mt-2">
             <div class="score-delta-item">
               <span class="score-delta-label">Lead</span>
-              <strong class="text-success">+${window.SparkMarg.escapeHtml(String(sim.scores.leadership || 0))}</strong>
+              <strong class="text-success">+${window.SparkMarg.escapeHtml(String(sim.total_scores.leadership || 0))}</strong>
             </div>
             <div class="score-delta-item">
               <span class="score-delta-label">Tech</span>
-              <strong class="text-primary">+${window.SparkMarg.escapeHtml(String(sim.scores.technical || 0))}</strong>
+              <strong class="text-primary">+${window.SparkMarg.escapeHtml(String(sim.total_scores.technical || 0))}</strong>
             </div>
             <div class="score-delta-item">
               <span class="score-delta-label">Prob</span>
-              <strong class="text-success">+${window.SparkMarg.escapeHtml(String(sim.scores.problem_solving || 0))}</strong>
+              <strong class="text-success">+${window.SparkMarg.escapeHtml(String(sim.total_scores.problem_solving || 0))}</strong>
             </div>
             <div class="score-delta-item">
               <span class="score-delta-label">Comm</span>
-              <strong class="text-primary">+${window.SparkMarg.escapeHtml(String(sim.scores.communication || 0))}</strong>
+              <strong class="text-primary">+${window.SparkMarg.escapeHtml(String(sim.total_scores.communication || 0))}</strong>
             </div>
           </div>
         </div>
       `).join('');
     }
-  };
+};
 
-  dashboardController.init();
-});
+export default dashboardController;

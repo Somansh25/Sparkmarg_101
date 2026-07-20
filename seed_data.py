@@ -26,27 +26,23 @@ REQUIRED_IMPACT_KEYS = {"leadership", "technical", "problem_solving", "communica
 
 def validate_simulation_schema(track: dict) -> bool:
     """Performs deep structural validation on simulation trees before database insertion."""
-    # Validate Root Structure
     missing_root = REQUIRED_ROOT_KEYS - track.keys()
     if missing_root:
         logger.error(f"Schema Violation: Track '{track.get('title', 'Untitled')}' is missing root keys: {missing_root}")
         return False
 
-    # Validate Inner Decision Nodes
     for dynamic_idx, step in enumerate(track.get("steps", [])):
         missing_step = REQUIRED_STEP_KEYS - step.keys()
         if missing_step:
             logger.error(f"Schema Violation: Step index {dynamic_idx} in '{track['title']}' missing keys: {missing_step}")
             return False
         
-        # Validate User Interactive Options
         for opt_idx, option in enumerate(step.get("options", [])):
             missing_opt = REQUIRED_OPTION_KEYS - option.keys()
             if missing_opt:
                 logger.error(f"Schema Violation: Option index {opt_idx} in step '{step['step_id']}' missing keys: {missing_opt}")
                 return False
             
-            # Validate Competency Weight Deltas
             missing_impact = REQUIRED_IMPACT_KEYS - option.get("impact", {}).keys()
             if missing_impact:
                 logger.error(f"Schema Violation: Impact vector in option '{option['option_id']}' missing vectors: {missing_impact}")
@@ -120,10 +116,9 @@ def ensure_local_assets_exist(file_path: str):
 def run_migration_sync():
     start_time = time()
     logger.info("Starting production database synchronization pipeline...")
-    
-    json_data_file = os.path.join(os.path.dirname(__file__), "data", "simulations.json")
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    json_data_file = os.path.join(base_dir, "data", "simulations.json")
     ensure_local_assets_exist(json_data_file)
-    
     try:
         with open(json_data_file, "r", encoding="utf-8") as f:
             career_tracks = json.load(f)
@@ -133,12 +128,17 @@ def run_migration_sync():
 
     try:
         db = get_db()
-        # Ping check to confirm active connection limits
         db.client.admin.command('ping')
         
         # Enforce Production Database Index Patterns
         db["simulations"].create_index("id", unique=True)
+        # CHANGED: Added index on simulations domain field to optimize catalog filter queries
+        db["simulations"].create_index("domain")
+
         db["user_progress"].create_index([("user_id", 1), ("simulation_id", 1)])
+        # CHANGED: Added compound index on user_id + status to accelerate active and historical progress lookups
+        db["user_progress"].create_index([("user_id", 1), ("status", 1)])
+
         logger.info("MongoDB cluster indices successfully validated and verified.")
     except (ConnectionFailure, Exception) as conn_err:
         logger.critical(f"Migration Aborted: Remote cloud connection failure: {conn_err}")
@@ -151,7 +151,6 @@ def run_migration_sync():
             continue
             
         try:
-            # Deterministic Transactional Upsert
             result = db["simulations"].update_one(
                 {"id": track["id"]},
                 {"$set": track},

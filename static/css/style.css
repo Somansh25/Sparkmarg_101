@@ -1,13 +1,12 @@
 /* ==========================================================================
-   1. DESIGN SYSTEM TOKENS & DESIGN VARIABLES
+   SPARKMARG DESIGN SYSTEM TOKENS & GLASSMORPHISM FOUNDATIONS
    ========================================================================== */
 
 :root {
-  /* Font Families */
+  /* Typography Scale */
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   --font-mono: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-  /* Typography Scale */
   --fs-xs: 0.75rem;
   --fs-sm: 0.875rem;
   --fs-base: 1rem;
@@ -18,7 +17,7 @@
   --fs-4xl: 2.25rem;
   --fs-5xl: 3rem;
 
-  /* Spacing Scale (Rem-based for clean zooming layout control) */
+  /* Spacing Scale */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -38,17 +37,26 @@
   --radius-2xl: 1.5rem;
   --radius-full: 9999px;
 
-  /* Transitions */
+  /* Smooth Transitions */
   --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 
+  /* Glassmorphism Design System Tokens */
+  --glass-bg: rgba(15, 23, 42, 0.7);
+  --glass-bg-hover: rgba(30, 41, 59, 0.85);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+  --glass-border-hover: 1px solid rgba(255, 255, 255, 0.2);
+  --glass-blur: blur(20px);
+  --glass-shadow: 0 8px 32px 0 rgba(2, 6, 23, 0.5);
+  --glass-glow: 0 0 25px rgba(99, 102, 241, 0.15);
+
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-overlay: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-overlay: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
 
   /* Z-Index Layer Map Hierarchy */
   --z-skip-link: 10000;
@@ -58,66 +66,55 @@
   --z-header: 800;
   --z-default: 1;
 
-  /* Global Base Theme Color Variables (Default: Light Mode Blueprint) */
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
-  --primary-light: rgba(79, 70, 229, 0.1);
-  --secondary: #4b5563;
-  --secondary-hover: #374151;
-  --accent: #7c3aed;
+  /* Vibrant Glass Palette */
+  --primary: #818cf8;
+  --primary-hover: #6366f1;
+  --primary-light: rgba(129, 140, 248, 0.15);
+  --accent: #c084fc;
+  --accent-glow: rgba(192, 132, 252, 0.4);
   --success: #10b981;
-  --success-bg: rgba(16, 185, 129, 0.1);
+  --success-bg: rgba(16, 185, 129, 0.15);
   --danger: #ef4444;
   --danger-bg: rgba(239, 68, 68, 0.15);
-  --info: #3b82f6;
-  --info-bg: rgba(59, 130, 246, 0.1);
   --warning: #f59e0b;
   --warning-bg: rgba(245, 158, 11, 0.15);
-  
-  --bg-main: #f8fafc;
-  --bg-card: #ffffff;
-  --bg-input: #ffffff;
-  --bg-header: rgba(255, 255, 255, 0.8);
-  --border: #e2e8f0;
-  --border-hover: #cbd5e1;
-  
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --text-inverse: #ffffff;
-  --focus-ring: rgba(79, 70, 229, 0.4);
-}
+  --info: #3b82f6;
+  --info-bg: rgba(59, 130, 246, 0.15);
 
-/* Dark Mode Variable Overrides */
-[data-theme="dark"] {
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-light: rgba(99, 102, 241, 0.15);
-  --secondary: #94a3b8;
-  --secondary-hover: #f8fafc;
-  --accent: #8b5cf6;
-  
-  --bg-main: #0f172a;
-  --bg-card: #1e293b;
-  --bg-input: #1e293b;
-  --bg-header: rgba(15, 23, 42, 0.8);
-  --border: #334155;
-  --border-hover: #475569;
-  
+  --bg-main: radial-gradient(ellipse at 20% -20%, rgba(99, 102, 241, 0.25), transparent 50%),
+              radial-gradient(ellipse at 80% 120%, rgba(192, 132, 252, 0.2), transparent 50%),
+              radial-gradient(circle at 50% 50%, #0f172a, #020617);
+  --bg-card: var(--glass-bg);
+  --bg-input: rgba(0, 0, 0, 0.3);
+  --bg-header: rgba(2, 6, 23, 0.75);
+  --border: rgba(255, 255, 255, 0.1);
+  --border-hover: rgba(255, 255, 255, 0.25);
+
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --text-inverse: #0f172a;
-  --focus-ring: rgba(99, 102, 241, 0.5);
-  
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  --text-inverse: #ffffff;
+  --focus-ring: rgba(129, 140, 248, 0.5);
+}
+
+/* Dark Mode Overrides */
+[data-theme="dark"] {
+  --glass-bg: rgba(2, 6, 23, 0.8);
+  --bg-main: radial-gradient(ellipse at 20% -20%, rgba(99, 102, 241, 0.18), transparent 50%),
+              radial-gradient(ellipse at 80% 120%, rgba(147, 51, 234, 0.15), transparent 50%),
+              radial-gradient(circle at 50% 50%, #090d16, #020617);
+}
+
+@supports not (backdrop-filter: blur(20px)) {
+  :root {
+    --glass-bg: #1e293b;
+    --glass-blur: none;
+  }
 }
 
 /* ==========================================================================
-   2. GLOBAL CSS RESET & SYSTEM FOUNDATIONS
+   2. GLOBAL RESET & SYSTEM FOUNDATIONS
    ========================================================================== */
 
-/* Page View Toggling Architecture */
 .page-view {
   display: none;
   width: 100%;
@@ -125,6 +122,46 @@
 
 .page-view.active {
   display: block;
+}
+
+/* Ambient Backdrop Orbs */
+.glow-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.4;
+  animation: orb-float 20s infinite alternate ease-in-out;
+}
+
+.orb-primary {
+  width: 40vw;
+  height: 40vw;
+  background: var(--primary);
+  top: -10%;
+  left: -10%;
+}
+
+.orb-secondary {
+  width: 35vw;
+  height: 35vw;
+  background: var(--accent);
+  bottom: -5%;
+  right: -5%;
+  animation-delay: -5s;
+}
+
+@keyframes orb-float {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(5%, 10%) scale(1.1); }
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 *, ::before, ::after {
@@ -140,7 +177,7 @@ html {
 }
 
 body {
-  background-color: var(--bg-main);
+  background: var(--bg-main);
   color: var(--text-main);
   font-family: var(--font-sans);
   font-size: var(--fs-base);
@@ -150,39 +187,25 @@ body {
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-attachment: fixed;
   overflow-x: hidden;
-  transition: background-color var(--transition-normal), color var(--transition-normal);
+  transition: background var(--transition-normal), color var(--transition-normal);
 }
 
 main {
   flex: 1 0 auto;
 }
 
-/* Strict Visual Focus Indicators for Accessibility (WCAG compliant) */
-*:focus {
-  outline: none;
-}
-
 *:focus-visible {
-  outline: 3px solid var(--focus-ring);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
-/* Text Selection Blueprint */
 ::selection {
   background-color: var(--primary-light);
   color: var(--primary);
 }
 
-/* Accessibility focus indicators */
-button:focus-visible, 
-a:focus-visible, 
-input:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 4px;
-}
-
-/* Standard Element Overrides */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   line-height: 1.25;
@@ -216,7 +239,6 @@ button, input, select, textarea {
   line-height: inherit;
 }
 
-/* Skip-to-Content link implementation */
 .skip-link {
   position: absolute;
   top: -100px;
@@ -233,13 +255,12 @@ button, input, select, textarea {
   top: var(--space-4);
 }
 
-/* Hide utility class used continuously across frontend script state engines */
 .hidden {
   display: none !important;
 }
 
 /* ==========================================================================
-   3. STRUCTURAL WRAPPERS & UTILITY SYSTEM CLASSES
+   3. STRUCTURAL UTILITIES & LAYOUT ENGINES
    ========================================================================== */
 
 .container {
@@ -251,28 +272,33 @@ button, input, select, textarea {
   padding-right: var(--space-4);
 }
 
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--glass-shadow);
+}
+
 .max-w-2xl { max-width: 42rem; }
 .mx-auto { margin-left: auto; margin-right: auto; }
 
-/* Text Alignment Utilities */
 .text-center { text-align: center !important; }
 .text-left { text-align: left !important; }
 .text-right { text-align: right !important; }
 
-/* Font Weight Utilities */
 .fw-bold { font-weight: 700 !important; }
 .fw-semibold { font-weight: 600 !important; }
 .fw-medium { font-weight: 500 !important; }
 .fw-regular { font-weight: 400 !important; }
 
-/* Semantic Color Utilities */
 .text-white { color: #ffffff !important; }
 .text-primary { color: var(--primary) !important; }
 .text-success { color: var(--success) !important; }
 .text-danger { color: var(--danger) !important; }
 .text-muted { color: var(--text-muted) !important; }
 
-/* Layout Grid Layout Engines */
 .grid {
   display: grid;
   gap: var(--space-6);
@@ -281,7 +307,6 @@ button, input, select, textarea {
 .grid-3 { grid-template-columns: repeat(3, 1fr); }
 .grid-4 { grid-template-columns: repeat(4, 1fr); }
 
-/* Flexbox Layout Utilities */
 .d-flex { display: flex !important; }
 .flex-column { flex-direction: column !important; }
 .justify-content-center { justify-content: center !important; }
@@ -293,7 +318,6 @@ button, input, select, textarea {
 .gap-3 { gap: var(--space-3) !important; }
 .gap-4 { gap: var(--space-4) !important; }
 
-/* Spacing Scale Helpers (Margin/Padding Core Boundaries) */
 .mt-1 { margin-top: var(--space-1) !important; }
 .mt-2 { margin-top: var(--space-2) !important; }
 .mt-3 { margin-top: var(--space-3) !important; }
@@ -315,28 +339,27 @@ button, input, select, textarea {
    4. NAVIGATION APPLICATION HEADER BASE
    ========================================================================== */
 
-.site-header {
+.navbar-wrapper {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 4.5rem;
+  height: 5rem;
   background-color: var(--bg-header);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid transparent;
   display: flex;
   align-items: center;
   z-index: var(--z-header);
-  transition: background-color var(--transition-normal), border-color var(--transition-normal), box-shadow var(--transition-normal);
+  transition: background-color var(--transition-normal), border-color var(--transition-normal), height var(--transition-normal), box-shadow var(--transition-normal);
 }
 
-/* Triggered programmatically via scroll state intercept check inside main.js */
-.site-header.scrolled {
+.navbar-wrapper.scrolled {
   background-color: var(--bg-header);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: var(--shadow-sm);
   height: 4rem;
 }
@@ -351,7 +374,7 @@ button, input, select, textarea {
   align-items: center;
 }
 
-.nav-brand {
+.brand-logo {
   font-size: var(--fs-xl);
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -359,6 +382,9 @@ button, input, select, textarea {
   align-items: center;
   user-select: none;
 }
+
+.logo-highlight { color: var(--primary); }
+
 .brand-spark { color: var(--text-main); }
 .brand-marg { color: var(--primary); }
 
@@ -380,11 +406,7 @@ button, input, select, textarea {
   color: var(--text-main);
 }
 
-.nav-link.active {
-  color: var(--primary);
-  font-weight: 600;
-}
-
+.nav-link.active,
 .nav-item.active {
   color: var(--primary) !important;
   font-weight: 600 !important;
@@ -403,7 +425,6 @@ button, input, select, textarea {
 
 .nav-link:hover::after,
 .nav-link.active::after,
-.nav-item.active::after,
 .nav-item.active::after {
   width: 100%;
 }
@@ -416,14 +437,18 @@ button, input, select, textarea {
 
 .nav-auth {
   display: flex;
+  gap: var(--space-3);
+}
+
+.nav-auth {
+  display: flex;
   align-items: center;
   gap: var(--space-3);
 }
 
-/* Theme Switcher Button */
 .theme-switcher {
-  background: none;
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  border: var(--glass-border);
   color: var(--text-main);
   width: 2.25rem;
   height: 2.25rem;
@@ -442,7 +467,7 @@ button, input, select, textarea {
 }
 
 /* ==========================================================================
-   5. AUTHENTICATED USER SESSION ELEMENTS & MENU DROPDOWNS
+   5. USER PROFILE MENU DROPDOWNS
    ========================================================================== */
 
 .user-profile-menu {
@@ -454,7 +479,7 @@ button, input, select, textarea {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: var(--radius-full);
-  background-color: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--accent));
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -463,25 +488,26 @@ button, input, select, textarea {
   font-size: var(--fs-base);
   cursor: pointer;
   user-select: none;
-  border: 2px solid transparent;
+  border: 2px solid rgba(255, 255, 255, 0.2);
   transition: var(--transition-fast);
   box-shadow: var(--shadow-sm);
 }
 
 .profile-avatar:hover {
   transform: scale(1.05);
-  border-color: var(--primary-hover);
-  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
+  box-shadow: var(--glass-glow);
 }
 
-/* Main.js triggered Dropdown Framework */
 .profile-dropdown {
   position: absolute;
   top: calc(100% + var(--space-2));
   right: 0;
   width: 14rem;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
   padding: var(--space-2);
@@ -489,7 +515,6 @@ button, input, select, textarea {
   flex-direction: column;
   gap: var(--space-1);
   z-index: var(--z-dropdown);
-  transform-origin: top right;
 }
 
 .dropdown-item {
@@ -544,7 +569,7 @@ span.dropdown-item:hover {
 }
 
 /* ==========================================================================
-   6. CORE FORMS & INTERACTIVE INPUT FLUID CONTROLS
+   6. FORMS & INPUT CONTROLS
    ========================================================================== */
 
 .form-group {
@@ -564,7 +589,7 @@ span.dropdown-item:hover {
   width: 100%;
   padding: var(--space-3) var(--space-4);
   background-color: var(--bg-input);
-  border: 1px solid var(--border);
+  border: var(--glass-border);
   border-radius: var(--radius-md);
   color: var(--text-main);
   font-family: var(--font-sans);
@@ -583,7 +608,7 @@ span.dropdown-item:hover {
 
 .form-control:focus {
   border-color: var(--primary);
-  background-color: var(--bg-card);
+  background-color: var(--glass-bg);
   box-shadow: 0 0 0 4px var(--focus-ring);
 }
 
@@ -594,7 +619,6 @@ span.dropdown-item:hover {
   opacity: 0.6;
 }
 
-/* Input Specific Variants */
 .search-wrapper {
   position: relative;
   width: 100%;
@@ -621,7 +645,6 @@ span.dropdown-item:hover {
   color: var(--primary);
 }
 
-/* Form Transaction Validation Errors */
 .error-msg-block {
   background-color: var(--danger-bg);
   border: 1px solid var(--danger);
@@ -634,7 +657,7 @@ span.dropdown-item:hover {
   text-align: left;
 }
 
-/* Button Subsystem Engines */
+/* Button Subsystems */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -645,6 +668,7 @@ span.dropdown-item:hover {
   padding: var(--space-3) var(--space-6);
   border-radius: var(--radius-md);
   border: 1px solid transparent;
+  backdrop-filter: blur(4px);
   cursor: pointer;
   user-select: none;
   text-align: center;
@@ -660,13 +684,16 @@ span.dropdown-item:hover {
 }
 
 .btn-primary {
-  background-color: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
   color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: var(--shadow-sm);
 }
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--primary-hover);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, var(--primary-hover), #4f46e5);
+  box-shadow: var(--glass-glow);
 }
 .btn-primary:active:not(:disabled) {
   transform: scale(0.98);
@@ -678,15 +705,16 @@ span.dropdown-item:hover {
 
 .hover-lift:hover {
   transform: translateY(-4px);
+  box-shadow: var(--glass-glow);
 }
 
 .btn-outline {
-  background-color: transparent;
-  border-color: var(--border);
+  background: var(--glass-bg);
+  border: var(--glass-border);
   color: var(--text-main);
 }
 .btn-outline:hover:not(:disabled) {
-  border-color: var(--border-hover);
+  border-color: var(--primary);
   background-color: var(--primary-light);
   color: var(--primary);
 }
@@ -695,11 +723,12 @@ span.dropdown-item:hover {
 }
 
 .btn-secondary {
-  background-color: var(--secondary);
+  background-color: rgba(148, 163, 184, 0.2);
+  border: var(--glass-border);
   color: #ffffff;
 }
 .btn-secondary:hover:not(:disabled) {
-  background-color: var(--secondary-hover);
+  background-color: rgba(148, 163, 184, 0.3);
   color: #ffffff;
 }
 
@@ -729,41 +758,59 @@ span.dropdown-item:hover {
 }
 
 /* ==========================================================================
-   7. RUNTIME CARDS & LAYOUT BLOCKS
+   7. RUNTIME GLASS CARDS
    ========================================================================== */
 
 .card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition-normal);
+  box-shadow: var(--glass-shadow);
+  transition: var(--transition-bounce);
   overflow: hidden;
 }
 
 .card:hover {
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow-lg);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-4px);
+  box-shadow: var(--glass-shadow), var(--glass-glow);
 }
 
 /* ==========================================================================
-   8. INTERFACE PAGES: LANDING HERO & PLATFORM FEATURES
+   8. HERO & PLATFORM FEATURES
    ========================================================================== */
 
 .main-content {
-  margin-top: 4.5rem; /* Offsets floating site header configuration */
+  margin-top: 4.5rem;
 }
 
-/* Hero Node Strategy Blueprint */
 .hero-section {
   padding: var(--space-16) 0 var(--space-12);
   position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 45vw;
+  height: 45vw;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  z-index: -1;
+  transform: translate(-50%, -50%);
+  filter: blur(40px);
 }
 
 .hero-badge {
   display: inline-block;
   padding: var(--space-2) var(--space-4);
-  background-color: var(--primary-light);
+  background: var(--primary-light);
+  border: 1px solid rgba(129, 140, 248, 0.3);
   color: var(--primary);
   font-size: var(--fs-xs);
   font-weight: 700;
@@ -779,6 +826,10 @@ span.dropdown-item:hover {
   letter-spacing: -0.04em;
   line-height: 1.1;
   margin-bottom: var(--space-4);
+  background: linear-gradient(135deg, #ffffff 0%, var(--text-muted) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .hero-subheadline {
@@ -793,7 +844,6 @@ span.dropdown-item:hover {
   margin-top: var(--space-6);
 }
 
-/* Platform Features Grid */
 .section-header {
   max-width: 36rem;
   margin: 0 auto var(--space-12);
@@ -849,212 +899,7 @@ span.dropdown-item:hover {
 }
 
 /* ==========================================================================
-   9. INTERFACE PAGES: DYNAMIC MONGO BLUEPRINT CATALOG
-   ========================================================================== */
-
-.catalog-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-8);
-}
-
-.filter-pills-container {
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-  margin-bottom: var(--space-8);
-  border-bottom: 1px solid var(--border);
-  padding-bottom: var(--space-4);
-}
-
-.domain-pill {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.domain-pill:hover {
-  border-color: var(--border-hover);
-  color: var(--text-main);
-  background-color: var(--bg-card);
-}
-
-.domain-pill.active {
-  background-color: var(--primary);
-  border-color: var(--primary);
-  color: #ffffff;
-}
-
-.catalog-card-difficulty {
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-sm);
-  text-transform: uppercase;
-}
-
-.difficulty-medium { background-color: var(--warning-bg); color: var(--warning); }
-.difficulty-hard { background-color: var(--danger-bg); color: var(--danger); }
-.difficulty-expert { background-color: var(--info-bg); color: var(--info); }
-
-.catalog-card-footer {
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.catalog-card-tech {
-  font-family: var(--font-mono);
-  font-size: var(--fs-xs);
-  color: var(--text-muted);
-}
-
-/* ==========================================================================
-   10. INTERFACE PAGES: COMPETENCY ANALYTICS DASHBOARD
-   ========================================================================== */
-
-.grid-dashboard {
-  grid-template-columns: 1fr 2.5fr;
-  align-items: start;
-}
-
-.dashboard-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.stats-card {
-  padding: var(--space-6);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.stat-block {
-  text-align: center;
-  flex: 1;
-}
-
-.stat-number {
-  font-size: var(--fs-3xl);
-  font-weight: 800;
-  color: var(--primary);
-}
-
-.stat-label {
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-}
-
-.stat-divider {
-  width: 1px;
-  height: 3rem;
-  background-color: var(--border);
-}
-
-.skills-card {
-  padding: var(--space-6);
-}
-
-.card-subtitle {
-  font-size: var(--fs-lg);
-  font-weight: 700;
-  margin-bottom: var(--space-4);
-  border-bottom: 1px solid var(--border);
-  padding-bottom: var(--space-2);
-}
-
-.skills-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.skill-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.skill-name {
-  font-size: var(--fs-sm);
-  font-weight: 500;
-}
-
-.skill-value {
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  background-color: var(--primary-light);
-  color: var(--primary);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-sm);
-}
-
-.section-heading {
-  font-size: var(--fs-xl);
-  font-weight: 700;
-  margin-bottom: var(--space-4);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-/* User Timeline Run Row Items */
-.dashboard-stream-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-4) var(--space-6);
-  background-color: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition-fast);
-}
-
-.dashboard-stream-row:hover {
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow-md);
-}
-
-.stream-row-meta {
-  text-align: left;
-}
-
-.stream-row-title {
-  font-size: var(--fs-lg);
-  font-weight: 600;
-}
-
-.stream-row-subtext {
-  font-size: var(--fs-xs);
-  color: var(--text-muted);
-}
-
-.stream-row-tag {
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  color: var(--primary);
-  text-transform: uppercase;
-}
-
-/* ==========================================================================
-   11. INTERFACE PAGES: SUBSCRIPTION TIERS & PRICING
+   9. SUBSCRIPTION TIERS & PRICING
    ========================================================================== */
 
 .pricing-card {
@@ -1069,19 +914,14 @@ span.dropdown-item:hover {
 
 .pricing-card-featured {
   border-color: var(--primary);
-  box-shadow: var(--shadow-xl);
-}
-
-/* Dynamic glow highlight underneath premium node cards */
-[data-theme="dark"] .pricing-card-featured {
-  box-shadow: 0 0 40px var(--primary-light);
+  box-shadow: var(--shadow-xl), var(--glass-glow);
 }
 
 .pricing-badge {
   position: absolute;
   top: var(--space-4);
   right: var(--space-4);
-  background-color: var(--primary);
+  background: var(--primary);
   color: #ffffff;
   font-size: var(--fs-xs);
   font-weight: 700;
@@ -1131,134 +971,7 @@ span.dropdown-item:hover {
 }
 
 /* ==========================================================================
-   12. INTERFACE PAGES: INTERACTIVE SANDBOX SIMULATOR WORKSPACE
-   ========================================================================== */
-
-.simulation-container {
-  max-width: 56rem;
-  margin: var(--space-10) auto;
-}
-
-.simulation-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: var(--space-4);
-  margin-bottom: var(--space-6);
-}
-
-.exit-link {
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.simulation-card {
-  padding: var(--space-10);
-  min-height: 24rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  text-align: left;
-}
-
-.node-text {
-  font-size: var(--fs-lg);
-  line-height: 1.75;
-  color: var(--text-main);
-  margin-bottom: var(--space-8);
-}
-
-.choices-container {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.choice-btn {
-  width: 100%;
-  text-align: left;
-  padding: var(--space-4) var(--space-6);
-  background-color: var(--bg-main);
-  border: 1px solid var(--border);
-  color: var(--text-main);
-  border-radius: var(--radius-lg);
-  font-size: var(--fs-base);
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.sim-option-card {
-  display: flex;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  background-color: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: var(--transition-normal);
-}
-
-.sim-option-card:hover {
-  border-color: var(--primary);
-  background-color: var(--primary-light);
-}
-
-.sim-option-card.selected {
-  border-color: var(--primary);
-  background-color: var(--primary-light);
-  box-shadow: 0 0 0 2px var(--primary);
-}
-
-.choice-btn:hover {
-  border-color: var(--primary);
-  background-color: var(--primary-light);
-  transform: translateX(4px);
-}
-
-.choice-btn:active {
-  transform: translateX(2px) scale(0.99);
-}
-
-/* Post-run Metrics Summary Component */
-.score-breakdown {
-  background-color: var(--bg-main);
-  border: 1px solid var(--border);
-  padding: var(--space-6);
-  border-radius: var(--radius-xl);
-  margin: var(--space-6) 0;
-}
-
-.sim-feedback-box {
-  padding: var(--space-4);
-  border-radius: var(--radius-md);
-  background-color: var(--info-bg);
-  border: 1px solid var(--info);
-  margin: var(--space-4) 0;
-}
-
-.score-delta-item {
-  text-align: center;
-}
-
-.score-delta-label {
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.score-delta-value {
-  font-size: var(--fs-2xl);
-  font-weight: 800;
-}
-
-/* ==========================================================================
-   13. ACCORDION MATRIX MODULES (HELP & FAQ SYSTEM)
+   10. FAQ ACCORDION MODULES
    ========================================================================== */
 
 .faq-container {
@@ -1266,9 +979,10 @@ span.dropdown-item:hover {
 }
 
 .faq-item {
-  border: 1px solid var(--border);
+  border: var(--glass-border);
   border-radius: var(--radius-lg);
-  background-color: var(--bg-card);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
   overflow: hidden;
   margin-bottom: var(--space-4);
   transition: var(--transition-fast);
@@ -1306,12 +1020,12 @@ span.dropdown-item:hover {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding var(--transition-normal);
-  background-color: var(--bg-card);
+  background-color: transparent;
 }
 
-/* Injected dynamically by active state managers */
 .faq-item.active {
   border-color: var(--primary);
+  box-shadow: var(--glass-glow);
 }
 
 .faq-item.active .faq-icon {
@@ -1320,7 +1034,7 @@ span.dropdown-item:hover {
 }
 
 /* ==========================================================================
-   14. SYSTEM WINDOW LAYERS & AUTHENTICATION MODALS
+   11. AUTHENTICATION MODALS & OVERLAYS
    ========================================================================== */
 
 .modal-overlay {
@@ -1329,9 +1043,9 @@ span.dropdown-item:hover {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1340,8 +1054,10 @@ span.dropdown-item:hover {
 }
 
 .modal-box {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-overlay);
   width: 100%;
@@ -1387,7 +1103,7 @@ span.dropdown-item:hover {
 }
 
 /* ==========================================================================
-   15. GLOBAL BANNER NOTIFICATIONS (ALERT MODULES)
+   12. BANNER NOTIFICATIONS & ALERTS
    ========================================================================== */
 
 .alert-container {
@@ -1415,24 +1131,22 @@ span.dropdown-item:hover {
   justify-content: space-between;
   pointer-events: auto;
   border-left: 4px solid rgba(0, 0, 0, 0.15);
-  margin-top: 5rem;
-  width: 50%;
-  margin-left: auto; 
-  margin-right: 0;
+  backdrop-filter: blur(12px);
 }
 
-.alert-success { background-color: var(--success); }
-.alert-danger { background-color: var(--danger); }
-.alert-info { background-color: var(--info); }
-.alert-warning { background-color: var(--warning); }
+.alert-success { background-color: rgba(16, 185, 129, 0.9); }
+.alert-danger { background-color: rgba(239, 68, 68, 0.9); }
+.alert-info { background-color: rgba(59, 130, 246, 0.9); }
+.alert-warning { background-color: rgba(245, 158, 11, 0.9); }
 
 /* ==========================================================================
-   16. PERSISTENT APPLICATION FOOTER SCHEMA
+   13. FOOTER
    ========================================================================== */
 
 .footer {
-  border-top: 1px solid var(--border);
-  background-color: var(--bg-card);
+  border-top: var(--glass-border);
+  background: var(--bg-header);
+  backdrop-filter: blur(16px);
   padding: var(--space-8) 0;
   margin-top: auto;
 }
@@ -1442,13 +1156,17 @@ span.dropdown-item:hover {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 var(--space-6);
+  display: flex;
+  flex-direction: column;
 }
 
 .footer-content {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: var(--space-4);
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .footer-title {
@@ -1485,8 +1203,8 @@ span.dropdown-item:hover {
 .social-icon {
   width: 2.5rem;
   height: 2.5rem;
-  background-color: var(--bg-main);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  border: var(--glass-border);
   color: var(--text-muted);
   border-radius: var(--radius-full);
   display: flex;
@@ -1501,15 +1219,15 @@ span.dropdown-item:hover {
   background-color: var(--primary);
   border-color: var(--primary);
   transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--glass-glow);
 }
 
 /* ==========================================================================
-   17. UI WORKSPACE DATA LOADING SKELETON PLACEHOLDERS
+   14. LOADING SKELETONS
    ========================================================================== */
 
 .skeleton {
-  background: linear-gradient(90deg, var(--border) 25%, var(--bg-main) 50%, var(--border) 75%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.05) 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s infinite linear;
 }

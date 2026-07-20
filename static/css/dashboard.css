@@ -1,14 +1,207 @@
 /* ==========================================================================
-   Analytics Dashboard Visualization Styles
+   COMMAND CENTER ANALYTICS & DASHBOARD GLASSMORPHIC STYLES
    ========================================================================== */
-#page-dashboard .stats-grid {
+
+#page-dashboard .dashboard-container {
+    max-width: 1200px;
+    margin: var(--space-8) auto;
+    padding: 0 var(--space-4);
+}
+
+#page-dashboard .dashboard-header {
+    margin-bottom: var(--space-8);
+}
+
+#page-dashboard .dashboard-title {
+    font-size: var(--fs-3xl);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+    margin-bottom: var(--space-1);
+}
+
+#page-dashboard .dashboard-subtitle {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+}
+
+#page-dashboard .grid-dashboard {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: 1fr 2.5fr;
+    gap: var(--space-8);
+    align-items: start;
+}
+
+#page-dashboard .dashboard-sidebar {
+    display: flex;
+    flex-direction: column;
     gap: var(--space-6);
 }
 
-#page-dashboard .radar-chart-container {
-    background: var(--bg-card);
-    padding: var(--space-8);
+#page-dashboard .stats-card {
+    padding: var(--space-6);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
     border-radius: var(--radius-xl);
+    box-shadow: var(--glass-shadow);
+}
+
+#page-dashboard .stat-block {
+    text-align: center;
+    flex: 1;
+}
+
+#page-dashboard .stat-number {
+    font-size: var(--fs-3xl);
+    font-weight: 800;
+    color: var(--primary);
+}
+
+#page-dashboard .stat-label {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+#page-dashboard .stat-divider {
+    width: 1px;
+    height: 3rem;
+    background-color: var(--border);
+}
+
+#page-dashboard .skills-card {
+    padding: var(--space-6);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--glass-shadow);
+}
+
+#page-dashboard .card-subtitle {
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    margin-bottom: var(--space-4);
+    border-bottom: var(--glass-border);
+    padding-bottom: var(--space-2);
+    color: var(--text-main);
+}
+
+#page-dashboard .tracker-section {
+    margin-bottom: var(--space-8);
+}
+
+#page-dashboard .section-heading {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    margin-bottom: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--text-main);
+}
+
+#page-dashboard .section-icon {
+    font-size: var(--fs-lg);
+}
+
+#page-dashboard .dashboard-stream-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-5) var(--space-6);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--glass-shadow);
+    transition: var(--transition-normal);
+    margin-bottom: var(--space-4);
+}
+
+#page-dashboard .dashboard-stream-row:hover {
+    border-color: rgba(129, 140, 248, 0.4);
+    transform: translateX(6px);
+    box-shadow: var(--glass-shadow), var(--glass-glow);
+}
+
+#page-dashboard .stream-row-meta {
+    text-align: left;
+}
+
+#page-dashboard .stream-row-title {
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+#page-dashboard .stream-row-subtext {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+}
+
+#page-dashboard .stream-row-tag {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+}
+
+/* Competency Progress & Scorecard Vectors */
+#page-dashboard .skills-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+#page-dashboard .skill-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-input);
+    border-radius: var(--radius-md);
+    border: var(--glass-border);
+}
+
+#page-dashboard .skill-name {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+#page-dashboard .skill-value {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(129, 140, 248, 0.3);
+}
+
+#page-dashboard .score-delta-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--bg-input);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    border: var(--glass-border);
+}
+
+#page-dashboard .score-delta-label {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
 }

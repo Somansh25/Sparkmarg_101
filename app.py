@@ -1,445 +1,454 @@
 import os
-import logging
 from datetime import datetime, timezone
-from functools import wraps
-from jose import jwt, JWTError, ExpiredSignatureError
-from flask import Flask, render_template, jsonify, request, abort
-from flask_cors import CORS
+from flask import Flask, render_template, request, jsonify, session
+from werkzeug.security import generate_password_hash, check_password_hash
 from bson.objectid import ObjectId
-from db import get_db
-from auth import hash_password, verify_password, create_access_token
 from dotenv import load_dotenv
 
-# ==========================================
-# SYSTEM SETUP & LOGGING CONFIGURATION
-# ==========================================
-load_dotenv()
+from config import config_by_name
+from db import get_db
+
+load_dotenv(override=True)
 
 app = Flask(__name__)
-CORS(app)  # Enable Cross-Origin Resource Sharing for frontend decoupling
 
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-app.config['ALGORITHM'] = os.environ.get('ALGORITHM','HS256')
+# Initialize Configuration
+env = os.environ.get('FLASK_ENV', 'development')
+app.config.from_object(config_by_name.get(env, config_by_name['default']))
+app.secret_key = app.config.get('SECRET_KEY')
 
-logger = logging.getLogger("SparkMargCore")
+# ==============================================================================
+# DATABASE CONNECTION & SEEDING SETUP
+# ==============================================================================
+try:
+    db = get_db()
+    print("Connected to MongoDB successfully.")
+except Exception as e:
+    print(f"MongoDB connection failed: {e}. Running with mock in-memory fallback.")
+    db = None
 
+# Fallback Mock Store for standalone execution without local Mongo instance
+MOCK_USERS = {}
+MOCK_HISTORIES = []
 
-# ==========================================
-# AUTHENTICATION & MULTI-TENANCY MIDDLEWARE
-# ==========================================
-def token_required(f):
-    """
-    Enforces strict access control limits. Decodes the incoming JSON Web Token
-    and injects the verified current user identifier context directly into protected routes.
-    """
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return jsonify({"error": "Authentication credentials missing or malformed"}), 401
-        
-        try:
-            token = auth_header.split(" ")[1]
-            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=[app.config['ALGORITHM']])
-            current_user_id = str(payload.get("sub"))
-            if not current_user_id:
-                raise ValueError("Subject claim missing from token profile payload.")
-        except ExpiredSignatureError:
-            logger.warning("Token expiration encountered.")
-            return jsonify({"error": "Access token has expired"}), 401
-        except (JWTError, ValueError, IndexError) as token_err:
-            logger.warning(f"Unauthorized intrusion blocked: {token_err}")
-            return jsonify({"error": "Invalid access credentials context profile"}), 401
-            
-        return f(current_user_id, *args, **kwargs)
-    return decorated
-
-
-# ==========================================
-# PAGE ROUTING VIEWS
-# ==========================================
-@app.route('/')
-def index(): return render_template('index.html')
-
-@app.route('/login')
-def login(): return render_template('login.html')
-
-@app.route('/register')
-def register(): return render_template('register.html')
-
-@app.route('/catalog')
-def catalog(): return render_template('catalog.html')
-
-@app.route('/dashboard')
-def dashboard(): return render_template('dashboard.html')
-
-@app.route('/simulation')
-def simulation(): return render_template('simulation.html')
-
-@app.route('/temp')
-def temp(): return render_template('temp.html')
-
-
-# ==========================================
-# CORE IDENTITY & PROFILE API
-# ==========================================
-@app.route('/api/v1/auth/me', methods=['GET'], strict_slashes=False)
-@app.route('/api/auth/me', methods=['GET'], strict_slashes=False)
-@token_required
-def auth_me(current_user_id):
-    """Fetches full authenticated contextual profile records belonging strictly to the requester."""
-    try:
-        db = get_db()
-        user = db["users"].find_one({"_id": ObjectId(current_user_id)})
-        if not user:
-            return jsonify({"error": "Associated security account context not found"}), 404
-            
-        return jsonify({
-            "authenticated": True,
-            "user": {
-                "id": str(user["_id"]),
-                "full_name": user.get("full_name", "Anonymous Developer"),
-                "email": user.get("email")
-            }
-        })
-    except Exception as e:
-        logger.error(f"Failed to fetch profile: {e}")
-        return jsonify({"error": "Internal profile processing engine error"}), 500
-
-
-# ==========================================
-# GLOBAL CAREER BLUEPRINT CATALOG ENDPOINTS
-# ==========================================
-@app.route('/api/v1/simulations', methods=['GET'], strict_slashes=False)
-@token_required
-def get_simulations(current_user_id):
-    """Retrieves simulation scenarios dynamically with optional domain filtering and text search parameters."""
-    try:
-        db = get_db()
-        
-        # 1. Capture query parameter inputs from incoming requests URL query string
-        domain = request.args.get('domain')
-        search = request.args.get('search')
-        
-        # 2. Dynamically compile the MongoDB search query structure
-        query = {}
-        if domain and domain.upper() != "ALL":
-            query["domain"] = domain
-
-        if search:
-            query["$or"] = [
-                {"title": {"$regex": search, "$options": "i"}},
-                {"description": {"$regex": search, "$options": "i"}}
-            ]
-            
-        # 3. Fetch matching data rows (excluding heavy nested tree paths for the summary list view)
-        cursor = db["simulations"].find(query, {"steps": 0})
-        
-        simulations = []
-        for sim in cursor:
-            sim["id"] = str(sim.get("id", sim["_id"]))
-            if "_id" in sim: 
-                del sim["_id"]
-            simulations.append(sim)
-            
-        return jsonify(simulations)
-    except Exception as e:
-        logger.error(f"Catalog collection gathering crash: {e}")
-        return jsonify({"error": "Failed to compile the available track lists"}), 500
-
-
-@app.route('/api/v1/simulations/<sim_id>', methods=['GET'], strict_slashes=False)
-@token_required
-def get_single_simulation(current_user_id, sim_id):
-    """Fetches details for a specific simulation including its complete interactive node trees."""
-    try:
-        db = get_db()
-        sim = db["simulations"].find_one({"id": sim_id})
-        if not sim:
-            return jsonify({"error": "Targeted simulation path not present within master definitions"}), 404
-            
-        sim["id"] = str(sim.get("id", sim["_id"]))
-        if "_id" in sim: del sim["_id"]
-        return jsonify(sim)
-    except Exception as e:
-        logger.error(f"Blueprint query crash on node {sim_id}: {e}")
-        return jsonify({"error": "Failed to open selected trajectory schema"}), 500
-
-
-# ==========================================
-# USER-ISOLATED INTERACTIVE SIMULATION RUNNER
-# ==========================================
-@app.route('/api/v1/progress/start/<sim_id>', methods=['POST'], strict_slashes=False)
-@token_required
-def initialize_or_resume_session(current_user_id, sim_id):
-    """Ensures a user-scoped, multi-tenant track logging profile instance starts accurately."""
-    try:
-        db = get_db()
-        
-        # Guard Constraint: Is there already an ongoing sandbox timeline for this user?
-        existing_session = db["user_progress"].find_one({"user_id": current_user_id, "simulation_id": sim_id})
-        if existing_session:
-            existing_session["_id"] = str(existing_session["_id"])
-            return jsonify(existing_session)
-            
-        # Target metadata blueprint definitions
-        meta = db["simulations"].find_one({"id": sim_id})
-        if not meta:
-            return jsonify({"error": "Cannot establish track session. Core master blueprint missing."}), 404
-            
-        # Dynamically map initial step coordinates using entry index sequence pointers
-        starting_step_id = "End"
-        if meta.get("steps") and len(meta["steps"]) > 0:
-            starting_step_id = meta["steps"][0]["step_id"]
-            
-        new_session = {
-            "user_id": current_user_id, # Strict Ownership Binding Applied
-            "simulation_id": sim_id,
-            "title": meta.get("title", "Interactive Simulation Path"),
-            "domain": meta.get("domain", "General Track"),
-            "current_step_id": starting_step_id,
-            "status": "IN_PROGRESS",
-            "history": [],
-            "scores": {"leadership": 0, "technical": 0, "problem_solving": 0, "communication": 0},
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }
-        
-        result = db["user_progress"].insert_one(new_session)
-        new_session["_id"] = str(result.inserted_id)
-        return jsonify(new_session), 201
-    except Exception as e:
-        logger.error(f"Session setup breakdown on node {sim_id}: {e}")
-        return jsonify({"error": "Failed to create runtime simulation tracker environment"}), 500
-
-
-@app.route('/api/v1/progress/<sim_id>/decision', methods=['POST'], strict_slashes=False)
-@token_required
-def submit_decision_choice(current_user_id, sim_id):
-    """
-    Evaluates branching logic options, validates step state alignment, 
-    updates cumulative user-profile competencies, and shifts progression coordinates.
-    """
-    data = request.get_json(silent=True) or {}
-    step_id = data.get("step_id")
-    option_id = data.get("option_id")
-
-    if not all([sim_id, step_id, option_id]):
-        return jsonify({"error": "Missing parameters"}), 400
-        
-    try:
-        db = get_db()
-        
-        # 1. Pull user state record with strict tenant validation constraints
-        session = db["user_progress"].find_one({
-            "user_id": current_user_id, 
-            "simulation_id": sim_id, 
-            "status": "IN_PROGRESS"
-        })
-        if not session: return jsonify({"error": "Session not found"}), 404
-        if session["current_step_id"] != step_id: return jsonify({"error": "State mismatch"}), 409
-            
-        # 2. Fetch Blueprint
-        blueprint = db["simulations"].find_one({"id": sim_id})
-        if not blueprint: return jsonify({"error": "Blueprint missing"}), 404
-            
-        # Find active node structures matching the timeline sequence
-        step_node = next((s for s in blueprint.get("steps", []) if s["step_id"] == step_id), None)
-        if not step_node: return jsonify({"error": "Step not found"}), 404
-            
-        # Find explicit details matching selected tracking action selections
-        chosen_option = next((o for o in step_node.get("options", []) if o["option_id"] == option_id), None)
-        if not chosen_option: return jsonify({"error": "Option not found"}), 400
-            
-        # 3. Calculate competency increments and append to the user history ledger
-        current_scores = session.get("scores", {"leadership": 0, "technical": 0, "problem_solving": 0, "communication": 0})
-        impact_deltas = chosen_option.get("impact", {})
-        for metric in current_scores:
-            current_scores[metric] += impact_deltas.get(metric, 0)
-            
-        history_entry = {
-            "step_id": step_id,
-            "step_title": step_node.get("title", "Interactive Decision Step"),
-            "chosen_option_id": option_id,
-            "option_text": chosen_option.get("text"),
-            "feedback": chosen_option.get("feedback"),
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-        
-        next_step_pointer = chosen_option.get("next_step_id")
-        session_status = "IN_PROGRESS"
-        completed_timestamp = None
-        
-        # Terminate running state records if tracking links resolve to null pointers
-        if not next_step_pointer:
-            session_status = "COMPLETED"
-            completed_timestamp = datetime.now(timezone.utc).isoformat()
-            
-        # 4. Atomically commit updates down to MongoDB storage pools
-        update_payload = {
-            "$set": {
-                "current_step_id": next_step_pointer,
-                "status": session_status,
-                "scores": current_scores,
-                "updated_at": datetime.now(timezone.utc).isoformat()
+DEFAULT_SIMULATIONS = [
+    {
+        "id": "sim_aiml_01",
+        "title": "LLM Latency & Memory Bottleneck Mitigation",
+        "domain": "AIML",
+        "difficulty": "Hard",
+        "description": "Diagnose high time-to-first-token latency spikes in a high-throughput enterprise LLM inference pipeline.",
+        "tags": ["PyTorch", "vLLM", "CUDA", "TensorRT"],
+        "nodes": {
+            "node_start": {
+                "text": "Your production LLM cluster is experiencing p99 latency spikes of >4000ms under 500 RPM. Monitoring alerts show high GPU memory fragmentation and KV-cache evictions. How do you investigate?",
+                "is_terminal": False,
+                "choices": [
+                    {
+                        "id": "choice_1a",
+                        "label": "Implement PagedAttention & Continuous Batching",
+                        "description": "Refactor inference server to vLLM with PagedAttention to eliminate memory fragmentation.",
+                        "next_node_id": "node_paged_att",
+                        "feedback": "PagedAttention dynamically allocates KV cache pages, reducing memory waste by 90% and stabilizing p99 latency."
+                    },
+                    {
+                        "id": "choice_1b",
+                        "label": "Increase GPU Instance Count Uniformly",
+                        "description": "Scale out the cluster size by 2x without software optimizations.",
+                        "next_node_id": "node_horizontal_scale",
+                        "feedback": "Scaling hardware masks memory fragmentation temporarily but doubles operational expenditure with diminishing throughput gains."
+                    }
+                ]
             },
-            "$push": {"history": history_entry}
+            "node_paged_att": {
+                "text": "PagedAttention reduced latency to 450ms. Next, users report slow decoding speeds for long context prompts (>16k tokens). What optimization do you deploy?",
+                "is_terminal": False,
+                "choices": [
+                    {
+                        "id": "choice_2a",
+                        "label": "Apply FlashAttention-2 with FP8 Quantization",
+                        "description": "Quantize weights and leverage optimized attention kernels for extended contexts.",
+                        "next_node_id": "node_finish_success",
+                        "feedback": "FlashAttention-2 accelerates decoding by 2.5x while FP8 maintains model evaluation accuracy within 0.2% variance."
+                    },
+                    {
+                        "id": "choice_2b",
+                        "label": "Truncate Context Windows to 4k Tokens",
+                        "description": "Enforce strict token context limits on input queries.",
+                        "next_node_id": "node_finish_degraded",
+                        "feedback": "Truncating context resolves performance constraints but severely degrades user capabilities and domain utility."
+                    }
+                ]
+            },
+            "node_horizontal_scale": {
+                "text": "Cloud budget alerts triggered due to unoptimized scaling. GPU memory fragmentation persists across nodes. What recovery strategy do you execute?",
+                "is_terminal": False,
+                "choices": [
+                    {
+                        "id": "choice_3a",
+                        "label": "Rollback and Deploy TensorRT-LLM Optimizations",
+                        "description": "Revert node scale and compile model weights via TensorRT-LLM.",
+                        "next_node_id": "node_finish_success",
+                        "feedback": "TensorRT-LLM achieves optimal GPU throughput with minimal memory footprint."
+                    }
+                ]
+            },
+            "node_finish_success": {
+                "text": "System stabilized! You successfully optimized LLM inference latency by 85% while staying strictly within infrastructure budget allocations.",
+                "is_terminal": True,
+                "score": 98
+            },
+            "node_finish_degraded": {
+                "text": "Simulation concluded. Latency stabilized, but product features were compromised due to aggressive truncation.",
+                "is_terminal": True,
+                "score": 68
+            }
         }
-        if completed_timestamp:
-            update_payload["$set"]["completed_at"] = completed_timestamp
-            
-        db["user_progress"].update_one({"_id": session["_id"]}, update_payload)
-        
-        # Build complete operational confirmation dictionary output object
+    },
+    {
+        "id": "sim_sys_02",
+        "title": "Distributed Cache Stampede Prevention",
+        "domain": "SYSTEMS",
+        "difficulty": "Medium",
+        "description": "Architect a resilient caching pattern to survive Redis cluster node failovers during peak traffic spikes.",
+        "tags": ["Redis", "Distributed Systems", "Go", "Architecture"],
+        "nodes": {
+            "node_start": {
+                "text": "A primary Redis node crashes under heavy load, causing 100,000 concurrent requests to hit the underlying PostgreSQL database simultaneously (Cache Stampede). DB CPU reaches 100%. What is your immediate remediation?",
+                "is_terminal": False,
+                "choices": [
+                    {
+                        "id": "c_mutex",
+                        "label": "Implement Distributed Locks (Redlock / Mutex)",
+                        "description": "Allow only one process to recompute the cache key while others await updates.",
+                        "next_node_id": "node_mutex_done",
+                        "feedback": "Distributed Mutex locks immediately shelter the primary database from redundant query execution."
+                    },
+                    {
+                        "id": "c_restart",
+                        "label": "Hard Restart PostgreSQL Primary Node",
+                        "description": "Reboot database instances to clear connection pools.",
+                        "next_node_id": "node_db_crash",
+                        "feedback": "Restarting the DB without cache protection results in an immediate re-lock stampede upon startup."
+                    }
+                ]
+            },
+            "node_mutex_done": {
+                "text": "Database CPU stabilized at 25%. To prevent future cache key expiration thundering herds, which long-term architectural pattern do you establish?",
+                "is_terminal": False,
+                "choices": [
+                    {
+                        "id": "c_probabilistic",
+                        "label": "XFetch / Probabilistic Early Expiration",
+                        "description": "Recompute cache keys probabilistically before TTL expires.",
+                        "next_node_id": "node_sys_success",
+                        "feedback": "Probabilistic early expiration completely eliminates cache thundering herd spikes with zero lock contention overhead."
+                    }
+                ]
+            },
+            "node_db_crash": {
+                "text": "Database fell into a reboot loop due to sustained request flooding.",
+                "is_terminal": True,
+                "score": 35
+            },
+            "node_sys_success": {
+                "text": "Architecture elevated to 99.999% cache availability standard. Distributed stampede risks neutralized.",
+                "is_terminal": True,
+                "score": 95
+            }
+        }
+    }
+]
+
+# Seed DB if empty
+if db is not None:
+    if db["simulations"].count_documents({}) == 0:
+        db["simulations"].insert_many(DEFAULT_SIMULATIONS)
+
+# ==============================================================================
+# ROUTE HANDLERS & API ENDPOINTS
+# ==============================================================================
+
+@app.route('/')
+def index():
+    """Renders the Single Page Application base host."""
+    return render_template('index.html')
+
+# ------------------------------------------------------------------------------
+# AUTHENTICATION API
+# ------------------------------------------------------------------------------
+
+@app.route('/api/auth/me', methods=['GET'])
+def get_current_user():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"user": None}), 200
+
+    if db is not None:
+        user = db["users"].find_one({"_id": ObjectId(user_id)})
+        if user:
+            return jsonify({
+                "user": {
+                    "id": str(user["_id"]),
+                    "name": user.get("name") or user.get("full_name"),
+                    "email": user.get("email")
+                }
+            }), 200
+    elif user_id in MOCK_USERS:
+        u = MOCK_USERS[user_id]
         return jsonify({
-            "status": session_status,
-            "current_step_id": next_step_pointer,
-            "feedback": chosen_option.get("feedback"),
-            "updated_scores": current_scores
-        })
-        
-    except Exception as e:
-        logger.error(f"Transaction pipeline collapse during execution step evaluation processing: {e}")
-        return jsonify({"error": "Failed to record user interaction selection"}), 500
+            "user": {
+                "id": u["id"],
+                "name": u.get("name") or u.get("full_name"),
+                "email": u["email"]
+            }
+        }), 200
 
+    session.clear()
+    return jsonify({"user": None}), 200
 
-# ==========================================
-# USER DASHBOARD DATA & COMPETENCY ANALYTICS
-# ==========================================
-@app.route('/api/v1/progress/active', methods=['GET'], strict_slashes=False)
-@token_required
-def get_active_progress(current_user_id):
-    """Fetches incomplete branching tracks currently underway for the active user only."""
-    try:
-        db = get_db()
-        cursor = db["user_progress"].find({"user_id": current_user_id, "status": "IN_PROGRESS"})
-        active_runs = []
-        for run in cursor:
-            active_runs.append({
-                "simulation_id": run["simulation_id"],
-                "title": run.get("title", "Active Running Pipeline"),
-                "domain": run.get("domain", "General Track"),
-                "current_step_id": run.get("current_step_id"),
-                "updated_at": run.get("updated_at")
-            })
-        return jsonify(active_runs)
-    except Exception as e:
-        logger.error(f"Active tracking pull failure: {e}")
-        return jsonify([]), 500
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    data = request.get_json() or {}
+    full_name = data.get('full_name', '').strip()
+    email = data.get('email', '').strip().lower()
+    password = data.get('password', '')
 
+    if not full_name or not email or not password:
+        return jsonify({"message": "All fields are required."}), 400
+    if len(password) < 6:
+        return jsonify({"message": "Password must be at least 6 characters."}), 400
 
-@app.route('/api/v1/progress/history', methods=['GET'], strict_slashes=False)
-@token_required
-def get_progress_history(current_user_id):
-    """Fetches fully resolved tree logs for historical review for the active user only."""
-    try:
-        db = get_db()
-        cursor = db["user_progress"].find({"user_id": current_user_id, "status": "COMPLETED"})
-        history_logs = []
-        for log in cursor:
-            history_logs.append({
-                "simulation_id": log["simulation_id"],
-                "title": log.get("title", "Completed Path Log"),
-                "completed_at": log.get("completed_at"),
-                "scores": log.get("scores")
-            })
-        return jsonify(history_logs)
-    except Exception as e:
-        logger.error(f"Historical trace gathering exception: {e}")
-        return jsonify([]), 500
+    hashed_pw = generate_password_hash(password)
 
-
-@app.route('/api/v1/analytics/overview', methods=['GET'], strict_slashes=False)
-@token_required
-def get_analytics(current_user_id):
-    """Calculates cumulative score matrices and totals unique to the requesting identity."""
-    try:
-        db = get_db()
-        completed_runs = list(db["user_progress"].find({"user_id": current_user_id, "status": "COMPLETED"}))
-        in_progress_count = db["user_progress"].count_documents({"user_id": current_user_id, "status": "IN_PROGRESS"})
-        
-        aggregated_scores = {"leadership": 0, "technical": 0, "problem_solving": 0, "communication": 0}
-        for run in completed_runs:
-            run_scores = run.get("scores", {})
-            for competency in aggregated_scores:
-                aggregated_scores[competency] += run_scores.get(competency, 0)
-                
-        return jsonify({
-            "total_completed": len(completed_runs),
-            "total_in_progress": in_progress_count,
-            "scores": aggregated_scores
-        })
-    except Exception as e:
-        logger.error(f"Global dynamic vector matrix metric generation exception: {e}")
-        return jsonify({"error": "Failed to compile competency analytics maps"}), 500
-
-
-# ==========================================
-# SYSTEM AUTHENTICATION INTERACTION MANAGER
-# ==========================================
-@app.route('/api/auth/register', methods=['POST'], strict_slashes=False)
-def api_register():
-    try:
-        db = get_db()
-        data = request.get_json(silent=True) or {}
-        full_name = data.get('username') or data.get('full_name')
-        email = data.get('email')
-        password = data.get('password')
-
-        if not all([full_name, email, password]):
-            return jsonify({"error": "Missing input registration elements: username/full_name, email, and password."}), 400
-
+    if db is not None:
         if db["users"].find_one({"email": email}):
-            return jsonify({"error": "An account linked with this email is already registered"}), 400
-
-        user_dict = {
-            "email": email,
-            "password_hash": hash_password(password),
+            return jsonify({"message": "User with this email already exists."}), 400
+        
+        res = db["users"].insert_one({
             "full_name": full_name,
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "email": email,
+            "password_hash": hashed_pw,
+            "created_at": datetime.now(timezone.utc)
+        })
+        user_id = str(res.inserted_id)
+    else:
+        for u in MOCK_USERS.values():
+            if u["email"] == email:
+                return jsonify({"message": "User with this email already exists."}), 400
+        user_id = f"mock_{len(MOCK_USERS)+1}"
+        MOCK_USERS[user_id] = {
+            "id": user_id,
+            "full_name": full_name,
+            "email": email,
+            "password_hash": hashed_pw
         }
-        db["users"].insert_one(user_dict)
-        return jsonify({"message": "User registered successfully."}), 201
-    except Exception as e:
-        logger.critical(f"Registration validation fault crash: {e}")
-        return jsonify({"error": "Internal account configuration fault encountered"}), 500
 
+    session['user_id'] = user_id
+    return jsonify({
+        "message": "Account created successfully.",
+        "user": {"id": user_id, "name": full_name, "email": email}
+    }), 201
 
-@app.route('/api/auth/login', methods=['POST'], strict_slashes=False)
-def api_login():
-    try:
-        db = get_db()
-        data = request.get_json(silent=True) or {}
-        email = data.get('email')
-        password = data.get('password')
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    data = request.get_json() or {}
+    email = data.get('email', '').strip().lower()
+    password = data.get('password', '')
 
-        if not email or not password:
-            return jsonify({"error": "Email and password inputs are required."}), 400
+    if not email or not password:
+        return jsonify({"message": "Email and password are required."}), 400
 
+    user_data = None
+    user_id = None
+
+    if db is not None:
         user = db["users"].find_one({"email": email})
-        if not user or not verify_password(password, user["password_hash"]):
-            return jsonify({"error": "Incorrect email credentials or verification password mismatch"}), 401
+        if user and check_password_hash(user.get("password_hash") or user.get("password", ""), password):
+            user_data = user
+            user_id = str(user["_id"])
+    else:
+        for uid, u in MOCK_USERS.items():
+            stored_pw = u.get("password_hash") or u.get("password", "")
+            if u["email"] == email and check_password_hash(stored_pw, password):
+                user_data = u
+                user_id = uid
+                break
 
-        # Embed unique MongoDB Object ID signature into token subject string definition parameters
-        access_token = create_access_token(data={"sub": str(user["_id"])})
-        return jsonify({"access_token": access_token, "token_type": "bearer"}), 200
-    except Exception as e:
-        logger.error(f"Login operational engine failure execution trace: {e}")
-        return jsonify({"error": "Internal system verification server failure"}), 500
+    if not user_data:
+        return jsonify({"message": "Invalid email or password credentials."}), 401
 
+    session['user_id'] = user_id
+    return jsonify({
+        "message": "Login successful.",
+        "user": {
+            "id": user_id,
+            "name": user_data.get("full_name") or user_data.get("name"),
+            "email": user_data["email"]
+        }
+    }), 200
 
-# ==========================================
-# GLOBAL CUSTOM ENGINE FAULT EXCEPTION OVERRIDES
-# ==========================================
-@app.errorhandler(404)
-def page_not_found(e):
-    if request.path.startswith('/api/'):
-        return jsonify({"error": "Requested API route path not verified or registered within active schemas"}), 404
-    return render_template('index.html'), 404
+@app.route('/api/auth/logout', methods=['POST'])
+def logout():
+    session.clear()
+    return jsonify({"message": "Logged out successfully."}), 200
 
-@app.errorhandler(500)
-def server_error(e):
-    return jsonify({"error": "Internal application engine failure"}), 500
+# ------------------------------------------------------------------------------
+# SIMULATION CATALOG & ENGINE API
+# ------------------------------------------------------------------------------
 
+@app.route('/api/simulations', methods=['GET'])
+def get_simulations():
+    if db is not None:
+        sims = list(db["simulations"].find({}, {"_id": 0}))
+    else:
+        sims = DEFAULT_SIMULATIONS
+
+    return jsonify({"simulations": sims}), 200
+
+@app.route('/api/simulations/start', methods=['POST'])
+def start_simulation():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"message": "Unauthorized session."}), 401
+
+    data = request.get_json() or {}
+    sim_id = data.get('simulation_id')
+
+    simulation = None
+    if db is not None:
+        simulation = db["simulations"].find_one({"id": sim_id}, {"_id": 0})
+    else:
+        simulation = next((s for s in DEFAULT_SIMULATIONS if s["id"] == sim_id), None)
+
+    if not simulation:
+        return jsonify({"message": "Simulation profile not found."}), 404
+
+    history_id = f"hist_{int(datetime.now(timezone.utc).timestamp())}"
+    
+    new_history = {
+        "history_id": history_id,
+        "user_id": user_id,
+        "simulation_id": sim_id,
+        "simulation_title": simulation["title"],
+        "status": "IN_PROGRESS",
+        "current_node_id": "node_start",
+        "score": 0,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+
+    if db is not None:
+        db["histories"].insert_one(new_history)
+    else:
+        MOCK_HISTORIES.append(new_history)
+
+    return jsonify({
+        "simulation": simulation,
+        "start_node_id": "node_start",
+        "history_id": history_id
+    }), 200
+
+@app.route('/api/simulations/step', methods=['POST'])
+def step_simulation():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"message": "Unauthorized session."}), 401
+
+    data = request.get_json() or {}
+    history_id = data.get('history_id')
+    node_id = data.get('node_id')
+    choice_id = data.get('choice_id')
+
+    # Fetch history
+    history = None
+    if db is not None:
+        history = db["histories"].find_one({"history_id": history_id, "user_id": user_id})
+    else:
+        history = next((h for h in MOCK_HISTORIES if h["history_id"] == history_id and h["user_id"] == user_id), None)
+
+    if not history:
+        return jsonify({"message": "Active simulation history state missing."}), 404
+
+    # Fetch simulation node details
+    sim_id = history["simulation_id"]
+    simulation = None
+    if db is not None:
+        simulation = db["simulations"].find_one({"id": sim_id})
+    else:
+        simulation = next((s for s in DEFAULT_SIMULATIONS if s["id"] == sim_id), None)
+
+    current_node = simulation["nodes"].get(node_id) if simulation else None
+    if not current_node:
+        return jsonify({"message": "Invalid simulation node execution boundary."}), 400
+
+    choice = next((c for c in current_node.get("choices", []) if c["id"] == choice_id), None)
+    if not choice:
+        return jsonify({"message": "Invalid decision selection choice."}), 400
+
+    next_node_id = choice["next_node_id"]
+    next_node = simulation["nodes"].get(next_node_id)
+
+    status = "COMPLETED" if next_node.get("is_terminal") else "IN_PROGRESS"
+    final_score = next_node.get("score", 0) if next_node.get("is_terminal") else 0
+
+    # Update history state
+    if db is not None:
+        db["histories"].update_one(
+            {"history_id": history_id},
+            {"$set": {
+                "current_node_id": next_node_id,
+                "status": status,
+                "score": final_score,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+    else:
+        history["current_node_id"] = next_node_id
+        history["status"] = status
+        history["score"] = final_score
+        history["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+    return jsonify({
+        "feedback": choice.get("feedback", "Choice recorded."),
+        "next_node_id": next_node_id,
+        "is_terminal": next_node.get("is_terminal", False),
+        "score": final_score
+    }), 200
+
+# ------------------------------------------------------------------------------
+# USER COMMAND CENTER / DASHBOARD API
+# ------------------------------------------------------------------------------
+
+@app.route('/api/user/dashboard', methods=['GET'])
+def user_dashboard():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"message": "Unauthorized session."}), 401
+
+    if db is not None:
+        histories = list(db["histories"].find({"user_id": user_id}, {"_id": 0}))
+    else:
+        histories = [h for h in MOCK_HISTORIES if h["user_id"] == user_id]
+
+    completed = [h for h in histories if h.get("status") == "COMPLETED"]
+    completed_count = len(completed)
+    avg_score = round(sum(h.get("score", 0) for h in completed) / completed_count) if completed_count > 0 else 0
+
+    skills_matrix = {
+        "System Design": 88 if completed_count > 0 else 0,
+        "Latency Optimization": 92 if completed_count > 0 else 0,
+        "Resource Management": 78 if completed_count > 0 else 0,
+        "Incident Recovery": 85 if completed_count > 0 else 0
+    }
+
+    return jsonify({
+        "completed_count": completed_count,
+        "avg_score": avg_score,
+        "skills": skills_matrix,
+        "history": sorted(histories, key=lambda x: x.get("updated_at", ""), reverse=True)
+    }), 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)

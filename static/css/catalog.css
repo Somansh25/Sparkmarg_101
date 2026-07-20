@@ -1,11 +1,137 @@
 /* ==========================================================================
-   Simulation Catalog Specific Layouts
+   SIMULATION CATALOG GLASSMORPHIC LAYOUTS
    ========================================================================== */
+
 #page-catalog .catalog-hero {
-    background: linear-gradient(135deg, var(--bg-card) 0%, var(--primary-light) 100%);
+    background: linear-gradient(135deg, var(--glass-bg) 0%, var(--primary-light) 100%);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     padding: var(--space-12);
     border-radius: var(--radius-2xl);
     margin-bottom: var(--space-8);
-    border: 1px solid var(--border);
+    border: var(--glass-border);
     text-align: center;
+    box-shadow: var(--glass-shadow);
+}
+
+#page-catalog .catalog-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+}
+
+#page-catalog .catalog-title {
+    font-size: var(--fs-3xl);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+    margin-bottom: var(--space-1);
+}
+
+#page-catalog .catalog-subtitle {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+}
+
+#page-catalog .filter-pills-container {
+    display: flex;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-8);
+    border-bottom: var(--glass-border);
+    padding-bottom: var(--space-6);
+}
+
+#page-catalog .domain-pill {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    color: var(--text-muted);
+    padding: var(--space-2) var(--space-5);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: var(--transition-normal);
+    user-select: none;
+}
+
+#page-catalog .domain-pill:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--glass-glow);
+}
+
+#page-catalog .domain-pill.active {
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    box-shadow: var(--glass-glow);
+}
+
+#page-catalog .catalog-card-difficulty,
+.badge-medium, .badge-hard, .badge-expert,
+.difficulty-medium, .difficulty-hard, .difficulty-expert {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.badge-medium, .difficulty-medium { 
+    background-color: var(--warning-bg); 
+    color: var(--warning); 
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-hard, .difficulty-hard { 
+    background-color: var(--danger-bg); 
+    color: var(--danger); 
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-expert, .difficulty-expert { 
+    background-color: var(--info-bg); 
+    color: var(--info); 
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+#page-catalog .catalog-card-footer {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: var(--glass-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#page-catalog .catalog-card-tech {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+}
+
+#page-catalog .simulation-catalog-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius-xl);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    transition: var(--transition-bounce);
+}
+
+#page-catalog .simulation-catalog-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(129, 140, 248, 0.4);
+    box-shadow: var(--glass-shadow), var(--glass-glow);
 }

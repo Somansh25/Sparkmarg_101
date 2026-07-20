@@ -2,8 +2,7 @@
    SparkMarg Simulation Catalog & Search Engine
    ===================================================================== */
 
-document.addEventListener('DOMContentLoaded', () => {
-  const catalogController = {
+const catalogController = {
     simulations: [],
     filteredSimulations: [],
     activeDomain: 'ALL',
@@ -128,12 +127,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <span style="font-size: 0.8rem; color: var(--text-muted);">
               ⏱️ ${window.SparkMarg.escapeHtml(String(sim.estimated_minutes || 15))} mins
             </span>
-            <a href="/simulation?id=${window.SparkMarg.escapeHtml(sim.id)}" class="btn btn-primary btn-sm">Start Simulation</a>
+            <a href="javascript:void(0)" onclick="window.SparkMarg.navigateTo('simulation?id=${window.SparkMarg.escapeHtml(sim.id)}')" class="btn btn-primary btn-sm">Start Simulation</a>
           </div>
         </div>
       `).join('');
     }
-  };
+};
 
-  catalogController.init();
-});
+export default catalogController;

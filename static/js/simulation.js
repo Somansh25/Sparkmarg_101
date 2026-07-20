@@ -1,18 +1,13 @@
-/* =====================================================================
-   SparkMarg Interactive Simulation Player Engine
-   ===================================================================== */
-
+// Client-side simulation engine for scenario state management
 const simPlayer = {
     simId: null,
     currentSimData: null,
     currentStep: null,
     selectedOptionId: null,
+    // FIXED: Cached scores state object to retain final metrics across SPA completion views
+    latestScores: null,
 
-    /**
-     * Initialize simulation state from URL query params or dataset attributes
-     */
     async init() {
-      // Support both traditional query params and SPA hash params
       const urlParams = new URLSearchParams(window.location.search || window.location.hash.split('?')[1]);
       this.simId = urlParams.get('id');
 
@@ -27,9 +22,6 @@ const simPlayer = {
       await this.initializeSession();
     },
 
-    /**
-     * Bind DOM interaction listeners
-     */
     bindEvents() {
       const submitBtn = document.getElementById('submit-decision-btn');
       if (submitBtn) {
@@ -42,9 +34,6 @@ const simPlayer = {
       }
     },
 
-    /**
-     * Fetch complete simulation scenario structure from API
-     */
     async loadSimulationData() {
       try {
         this.currentSimData = await window.SparkMarg.apiRequest(`/api/v1/simulations/${this.simId}`);
@@ -54,15 +43,13 @@ const simPlayer = {
       }
     },
 
-    /**
-     * Start session or restore progress checkpoint
-     */
     async initializeSession() {
       try {
         const progress = await window.SparkMarg.apiRequest(`/api/v1/progress/start/${this.simId}`, {
           method: 'POST'
         });
 
+        this.latestScores = progress.total_scores;
         this.updateScorecardUI(progress.total_scores);
 
         if (progress.status === 'COMPLETED') {
@@ -75,9 +62,6 @@ const simPlayer = {
       }
     },
 
-    /**
-     * Render header metadata (Title, Domain, Difficulty)
-     */
     renderSimulationHeader() {
       const titleElem = document.getElementById('sim-title');
       const domainElem = document.getElementById('sim-domain');
@@ -91,9 +75,6 @@ const simPlayer = {
       }
     },
 
-    /**
-     * Render active step scenario and decision choices
-     */
     loadStep(stepId) {
       this.selectedOptionId = null;
       const step = this.currentSimData.steps.find(s => s.step_id === stepId);
@@ -105,7 +86,6 @@ const simPlayer = {
 
       this.currentStep = step;
 
-      // Hide feedback panel and next controls
       const feedbackBox = document.getElementById('sim-feedback-container');
       const nextBtn = document.getElementById('next-step-btn');
       const submitBtn = document.getElementById('submit-decision-btn');
@@ -117,7 +97,6 @@ const simPlayer = {
         submitBtn.disabled = true;
       }
 
-      // Render Step Text
       const stepTitle = document.getElementById('step-title');
       const stepScenario = document.getElementById('step-scenario');
       const optionsContainer = document.getElementById('options-container');
@@ -125,7 +104,6 @@ const simPlayer = {
       if (stepTitle) stepTitle.textContent = step.title;
       if (stepScenario) stepScenario.textContent = step.scenario;
 
-      // Render Options
       if (optionsContainer) {
         optionsContainer.innerHTML = '';
         step.options.forEach((opt, idx) => {
@@ -151,9 +129,6 @@ const simPlayer = {
       }
     },
 
-    /**
-     * Highlight chosen option card
-     */
     selectOption(optionId, cardElem) {
       this.selectedOptionId = optionId;
 
@@ -166,9 +141,6 @@ const simPlayer = {
       if (submitBtn) submitBtn.disabled = false;
     },
 
-    /**
-     * Submit selected option decision to backend engine
-     */
     async handleDecisionSubmit() {
       if (!this.selectedOptionId) return;
 
@@ -185,10 +157,11 @@ const simPlayer = {
           }
         });
 
+        this.latestScores = result.updated_total_scores;
         this.renderDecisionFeedback(result);
         this.updateScorecardUI(result.updated_total_scores);
 
-        if (result.is_completed) {
+        if (result.status === 'COMPLETED') {
           const nextBtn = document.getElementById('next-step-btn');
           if (nextBtn) {
             nextBtn.textContent = 'View Final Results';
@@ -208,9 +181,6 @@ const simPlayer = {
       }
     },
 
-    /**
-     * Show consequence feedback and impact
-     */
     renderDecisionFeedback(result) {
       const feedbackBox = document.getElementById('sim-feedback-container');
       const feedbackText = document.getElementById('sim-feedback-text');
@@ -225,21 +195,16 @@ const simPlayer = {
       }
     },
 
-    /**
-     * Advance engine to next step ID or completion screen
-     */
+    // FIXED: Render completion view using cached scores instead of forcing a window.location.reload()
     advanceToNextStep() {
       const nextBtn = document.getElementById('next-step-btn');
-      if (nextBtn.dataset.completed === 'true') {
-        window.location.reload();
-      } else {
+      if (nextBtn && nextBtn.dataset.completed === 'true') {
+        this.renderCompletionScreen(this.latestScores || {});
+      } else if (nextBtn && nextBtn.dataset.nextStepId) {
         this.loadStep(nextBtn.dataset.nextStepId);
       }
     },
 
-    /**
-     * Synchronize metric counters on sidebar UI
-     */
     updateScorecardUI(scores) {
       if (!scores) return;
 
@@ -254,9 +219,6 @@ const simPlayer = {
       if (comm) comm.textContent = scores.communication || 0;
     },
 
-    /**
-     * Render full completion wrap-up state
-     */
     renderCompletionScreen(finalScores) {
       const mainPlayer = document.getElementById('sim-player-card');
       if (!mainPlayer) return;
@@ -314,12 +276,14 @@ const simPlayer = {
       btnGroup.style.justifyContent = 'center';
 
       const catBtn = document.createElement('a');
-      catBtn.href = '/catalog';
+      catBtn.href = 'javascript:void(0)';
+      catBtn.onclick = () => window.SparkMarg.navigateTo('catalog');
       catBtn.className = 'btn btn-secondary';
       catBtn.textContent = 'Explore Catalog';
 
       const dashBtn = document.createElement('a');
-      dashBtn.href = '/dashboard';
+      dashBtn.href = 'javascript:void(0)';
+      dashBtn.onclick = () => window.SparkMarg.navigateTo('dashboard');
       dashBtn.className = 'btn btn-primary';
       dashBtn.textContent = 'Go to Dashboard';
 

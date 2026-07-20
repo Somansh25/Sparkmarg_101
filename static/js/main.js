@@ -1,50 +1,42 @@
-/* =====================================================================
-   SparkMarg Core Application Utilities & Helper Functions
-   ===================================================================== */
-
+// SparkMarg Core Orchestrator: Manages global state, dynamic navigation, and authentication lifecycle.
 window.SparkMarg = {
   currentUser: null,
   activeController: null,
 
-  /**
-   * Initialize common interface elements, authentication checks, and form routers
-   */
-  init() {
-    this.checkAuthState();
-    this.setupNavigation();
-    this.setupAuthForms();
-    this.setupHeaderScroll();
-    this.setupFAQ();
-    this.setupScrollReveal();
-    this.setupThemeToggle();
-    
-    // Handle initial route based on hash for landing page sections
-    const initialHash = window.location.hash.slice(1);
-    if (initialHash) {
-      this.navigateTo(initialHash);
+  async init() {
+    try {
+      await this.checkAuthState();
+      if (document.getElementById('cloud-shell-expired-overlay')) return;
+
+      await this.loadController('auth');
+      this.setupHeaderScroll();
+      this.setupFAQ();
+      this.setupScrollReveal();
+      this.setupThemeToggle();
+      
+      const initialHash = window.location.hash.slice(1);
+      if (initialHash) {
+        this.navigateTo(initialHash);
+      }
+      this.setupNavigation();
+    } catch (err) {
+      console.error("SparkMarg failed to initialize:", err);
     }
   },
 
-  /**
-   * Centralized view orchestration engine for dynamic navigation
-   */
   async navigateTo(targetRoute) {
-    // 0. Cleanup previous dynamic controller lifecycle
     if (this.activeController && typeof this.activeController.destroy === 'function') {
       this.activeController.destroy();
       this.activeController = null;
     }
 
-    // 1. Handle Modal Navigation
     if (targetRoute.endsWith('Modal')) {
       const modal = document.getElementById(targetRoute);
       if (modal) modal.classList.remove('hidden');
       return;
     }
-
-    // 2. Handle Dynamic Routes (SPA Fragments)
-    const dynamicRoutes = ['temp', 'catalog', 'dashboard', 'simulation'];
-    const baseRoute = targetRoute.split('?')[0]; // Handle query params if any
+    let baseRoute = targetRoute.split('?')[0];
+    const dynamicRoutes = ['catalog', 'dashboard', 'simulation', 'login', 'register'];
 
     if (dynamicRoutes.includes(baseRoute)) {
       if (baseRoute === 'dashboard' && !this.currentUser) {
@@ -52,29 +44,25 @@ window.SparkMarg = {
         this.showAlert("Authorization required to access workspace.", "warning");
         return;
       }
-
-      // Parallel load HTML, Styles, and Controller for optimized performance
+      document.body.classList.add('page-loading');
       await Promise.all([
         this.loadDynamicPage(baseRoute),
         this.loadDynamicStyles(baseRoute)
       ]);
       await this.loadController(baseRoute);
     } else {
-      // Disable any active page-specific styles when returning to static landing sections
       this.togglePageStyles(null);
     }
-
-    // 3. Handle View Toggling
     const views = document.querySelectorAll('.page-view');
+    document.body.classList.remove('page-loading');
     if (views.length > 0) {
       views.forEach(view => view.classList.remove('active'));
       const selectedView = document.getElementById(`page-${baseRoute}`);
       if (selectedView) {
         selectedView.classList.add('active');
-        // Update URL hash for bookmarking and history
-        window.location.hash = targetRoute;
-        
-        // Update active status for navigation items
+        if (window.location.hash !== `#${targetRoute}`) {
+          window.location.hash = targetRoute;
+        }
         document.querySelectorAll('.nav-link').forEach(link => {
           link.classList.remove('active');
           const clickAttr = link.getAttribute('onclick');
@@ -85,8 +73,6 @@ window.SparkMarg = {
         window.scrollTo(0, 0);
       }
     }
-
-    // 5. Close mobile menu if expanded
     const navMenu = document.getElementById('navMenu');
     const hamburgerToggle = document.getElementById('hamburgerToggle');
     if (navMenu && navMenu.classList.contains('active')) {
@@ -96,13 +82,15 @@ window.SparkMarg = {
     }
   },
 
-  /**
-   * Dynamically imports and initializes the controller for a specific route
-   */
   async loadController(route) {
+    const routeMapping = {
+      'login': 'auth',
+      'register': 'auth'
+    };
+    const controllerName = routeMapping[route] || route;
+
     try {
-      // Dynamically import the module. Note: paths are relative to this file
-      const module = await import(`./${route}.js`);
+      const module = await import(`./${controllerName}.js`);
       if (module.default) {
         this.activeController = module.default;
         if (typeof this.activeController.init === 'function') {
@@ -114,13 +102,9 @@ window.SparkMarg = {
     }
   },
 
-  /**
-   * Dynamically fetches and injects page-specific CSS into the document head
-   */
+  // FIXED: Refactored style loading to prevent accumulation of orphan dynamic stylesheets
   async loadDynamicStyles(route) {
     const styleId = `style-bundle-${route}`;
-    
-    // Toggle visibility logic first to ensure no clashing during the fetch
     this.togglePageStyles(route);
 
     if (document.getElementById(styleId)) return;
@@ -143,9 +127,7 @@ window.SparkMarg = {
     });
   },
 
-  /**
-   * Manages the disabled state of stylesheets to prevent CSS rule collisions
-   */
+  // FIXED: Explicitly enables active stylesheet while disabling inactive ones to maintain clean render state
   togglePageStyles(activeRoute) {
     const pageStyles = document.querySelectorAll('.dynamic-page-style');
     pageStyles.forEach(style => {
@@ -153,76 +135,57 @@ window.SparkMarg = {
     });
   },
 
-  /**
-   * Fetches external HTML from the server and injects it into the main container
-   */
-  async loadDynamicPage(page) {
+  async loadDynamicPage(page, forceRefresh = false) {
     const container = document.getElementById(`page-${page}`);
     if (!container) return;
-
-    // If content is already present, skip fetching to optimize performance
-    if (container.innerHTML.trim() !== "") return;
-
+    if (!forceRefresh && container.innerHTML.trim() !== "") return;
     try {
-      // Fetch the template content from our new Flask route
       const response = await fetch(`/${page}`);
       if (!response.ok) throw new Error(`Could not load ${page} content`);
-      
-      const htmlContent = await response.text();
-      container.innerHTML = htmlContent;
+      container.innerHTML = await response.text();
     } catch (error) {
       container.innerHTML = `<h2>Error 404</h2><p>Page not found.</p>`;
       console.error(error);
     }
   },
 
-  /**
-   * Verify session status and update UI elements accordingly
-   */
   async checkAuthState() {
     if (!localStorage.getItem('access_token')) {
       this.updateNavForGuest();
-      return;
+      return false;
     }
-
     try {
       const data = await this.apiRequest('/api/auth/me');
       this.currentUser = data.user;
       this.updateNavForAuth(this.currentUser);
+      return true;
     } catch (error) {
+      if (error.message.includes('401')) {
+        localStorage.removeItem('access_token');
+      }
       this.currentUser = null;
       this.updateNavForGuest();
+      return false;
     }
   },
 
-  /**
-   * Handle interactive color shifting for the fixed header
-   */
   setupHeaderScroll() {
     const navbar = document.querySelector('.site-header');
     if (!navbar) return;
-    
     const evaluateHeaderScroll = () => {
-      window.scrollY > 50 ? navbar.classList.add('scrolled') : navbar.classList.remove('scrolled');
+      window.scrollY > 20 ? navbar.classList.add('scrolled') : navbar.classList.remove('scrolled');
     };
-
     window.addEventListener('scroll', evaluateHeaderScroll);
     evaluateHeaderScroll();
   },
 
-  /**
-   * Render navigation options for authenticated users
-   */
   updateNavForAuth(user) {
     const navUserContainer = document.getElementById('nav-user-section');
     if (navUserContainer) {
       navUserContainer.innerHTML = '';
       const menuDiv = document.createElement('div');
       menuDiv.className = 'user-menu';
-      menuDiv.style.display = 'flex';
-      menuDiv.style.alignItems = 'center';
       menuDiv.style.gap = '0.75rem';
-
       const nameSpan = document.createElement('span');
       nameSpan.style.fontWeight = '500';
       nameSpan.style.color = 'var(--text-main)';
@@ -234,13 +197,10 @@ window.SparkMarg = {
       logoutBtn.className = 'btn btn-outline btn-sm';
       logoutBtn.textContent = 'Logout';
       logoutBtn.addEventListener('click', () => this.logout());
-
       menuDiv.appendChild(nameSpan);
       menuDiv.appendChild(logoutBtn);
       navUserContainer.appendChild(menuDiv);
     }
-
-    // Handle index.html specific advanced navigation components
     const navAuth = document.getElementById('navAuthSection');
     const userMenu = document.getElementById('userProfileMenu');
     if (navAuth && userMenu) {
@@ -251,18 +211,14 @@ window.SparkMarg = {
     }
   },
 
-  /**
-   * Render navigation options for unauthenticated guests
-   */
   updateNavForGuest() {
     const navUserContainer = document.getElementById('nav-user-section');
     if (navUserContainer) {
       navUserContainer.innerHTML = `
-        <a href="/login" class="btn btn-sm btn-outline" id="nav-login-btn">Log In</a>
-        <a href="/register" class="btn btn-sm btn-primary" id="nav-register-btn">Sign Up</a>
+        <a href="javascript:void(0)" onclick="window.SparkMarg.navigateTo('login')" class="btn btn-sm btn-outline" id="nav-login-btn">Log In</a>
+        <a href="javascript:void(0)" onclick="window.SparkMarg.navigateTo('register')" class="btn btn-sm btn-primary" id="nav-register-btn">Sign Up</a>
       `;
     }
-
     const navAuth = document.getElementById('navAuthSection');
     const userMenu = document.getElementById('userProfileMenu');
     if (navAuth && userMenu) {
@@ -271,46 +227,31 @@ window.SparkMarg = {
     }
   },
 
-  /**
-   * Perform logout action and redirect
-   */
   async logout() {
     localStorage.removeItem('access_token');
     this.showAlert('Logged out successfully', 'success');
-    setTimeout(() => { window.location.href = '/login'; }, 1000);
+    setTimeout(() => { this.navigateTo('login'); }, 1000);
   },
 
-  /**
-   * Highlight active route in navigation bar
-   */
   setupNavigation() {
     const currentPath = window.location.pathname;
     const navLinks = document.querySelectorAll('.nav-link');
-    
     navLinks.forEach(link => {
       if (link.getAttribute('href') === currentPath) {
         link.classList.add('active');
       }
     });
-
-    // Navigation Toggle for Mobile View
     const hamburgerToggle = document.getElementById('hamburgerToggle');
     const navMenu = document.getElementById('navMenu');
-
     if (hamburgerToggle && navMenu) {
       const toggleMobileMenu = () => {
         hamburgerToggle.classList.toggle('active');
         navMenu.classList.toggle('active');
         const isExpanded = hamburgerToggle.classList.contains('active');
         hamburgerToggle.setAttribute('aria-expanded', isExpanded);
-
-        // Prevent body layer background scroll leaking when mobile menu is expanded
         document.body.style.overflow = isExpanded ? 'hidden' : '';
       };
-
       hamburgerToggle.addEventListener('click', toggleMobileMenu);
-
-      // Dismiss overlay states when individual anchor targets are touched
       navLinks.forEach(link => {
         link.addEventListener('click', () => {
           if (navMenu.classList.contains('active')) toggleMobileMenu();
@@ -319,19 +260,14 @@ window.SparkMarg = {
     }
   },
 
-  /**
-   * Interactive Accordion Mechanics (FAQ)
-   */
   setupFAQ() {
     const faqItems = document.querySelectorAll('.faq-item');
     faqItems.forEach(item => {
       const trigger = item.querySelector('.faq-trigger');
       const content = item.querySelector('.faq-panel') || item.querySelector('.faq-content');
-
       if (trigger && content) {
         trigger.addEventListener('click', () => {
           const isCurrentlyActive = item.classList.contains('active');
-
           faqItems.forEach(alternateItem => {
             alternateItem.classList.remove('active');
             const altContent = alternateItem.querySelector('.faq-panel') || alternateItem.querySelector('.faq-content');
@@ -339,7 +275,6 @@ window.SparkMarg = {
             if (altContent) altContent.style.maxHeight = null;
             if (altTrigger) altTrigger.setAttribute('aria-expanded', 'false');
           });
-
           if (!isCurrentlyActive) {
             item.classList.add('active');
             trigger.setAttribute('aria-expanded', 'true');
@@ -350,13 +285,9 @@ window.SparkMarg = {
     });
   },
 
-  /**
-   * Scroll Intersection Reveal Transitions
-   */
   setupScrollReveal() {
     const revealElements = document.querySelectorAll('.reveal');
     if (revealElements.length === 0) return;
-
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -365,28 +296,21 @@ window.SparkMarg = {
         }
       });
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-
     revealElements.forEach(el => observer.observe(el));
   },
 
-  /**
-   * Dark Mode Toggle Logic
-   */
   setupThemeToggle() {
     const themeToggle = document.getElementById('themeToggle');
     if (!themeToggle) return;
-
     if (localStorage.getItem('theme') === 'dark') {
       document.documentElement.setAttribute('data-theme', 'dark');
       const icon = themeToggle.querySelector('i');
       if (icon) icon.classList.replace('fa-moon', 'fa-sun');
     }
-
     themeToggle.addEventListener('click', () => {
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
       const newTheme = isDark ? 'light' : 'dark';
       const icon = themeToggle.querySelector('i');
-
       if (newTheme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
         if (icon) icon.classList.replace('fa-moon', 'fa-sun');
@@ -398,135 +322,92 @@ window.SparkMarg = {
     });
   },
 
-  /**
-   * Bind event routers dynamically for Auth Forms if they exist on the DOM
-   */
-  setupAuthForms() {
-    const loginForm = document.getElementById('login-form');
-    if (loginForm) {
-      loginForm.addEventListener('submit', (e) => this.handleLoginSubmit(e));
-    }
-
-    const registerForm = document.getElementById('register-form');
-    if (registerForm) {
-      registerForm.addEventListener('submit', (e) => this.handleRegisterSubmit(e));
-    }
-  },
-
-  /**
-   * Extracted External Login Action
-   */
-  async handleLoginSubmit(e) {
-    e.preventDefault();
-    const form = e.target;
-    const btn = form.querySelector('button[type="submit"]') || document.getElementById('submit-btn');
-    const originalText = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'Authenticating...';
-
-    const loginData = {
-      email: (form.querySelector('input[type="email"]') || document.getElementById('email')).value,
-      password: (form.querySelector('input[type="password"]') || document.getElementById('password')).value
-    };
-
-    try {
-      const data = await this.apiRequest('/api/auth/login', {
-        method: 'POST',
-        body: loginData
-      });
-
-      localStorage.setItem('access_token', data.access_token);
-      this.showAlert('Login successful! Redirecting...', 'success');
-      this.closeModal('loginModal');
-      setTimeout(() => { window.location.href = '/dashboard'; }, 1000);
-    } catch (err) {
-      this.showAlert(err.message, 'danger');
-      btn.disabled = false;
-      btn.textContent = originalText;
-    }
-  },
-
-  /**
-   * Extracted External Registration Action
-   */
-  async handleRegisterSubmit(e) {
-    e.preventDefault();
-    const form = e.target;
-    const btn = form.querySelector('button[type="submit"]') || document.getElementById('submit-btn');
-    const originalText = btn.textContent;
-    
-    const username = (form.querySelector('#username') || document.getElementById('username')).value.trim();
-    const email = (form.querySelector('input[type="email"]') || document.getElementById('email')).value.trim();
-    const password = (form.querySelector('input[name="password"]') || document.getElementById('password')).value;
-    const confirmPassword = (form.querySelector('#confirm-password') || document.getElementById('confirm-password')).value;
-
-    if (password.length < 8) {
-      this.showAlert('Password must be at least 8 characters long.', 'danger');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      this.showAlert('Passwords do not match.', 'danger');
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = 'Creating Account...';
-
-    try {
-      await this.apiRequest('/api/auth/register', {
-        method: 'POST',
-        body: { username, email, password }
-      });
-      this.showAlert('Registration successful! Please log in.', 'success');
-      this.closeModal('signupModal');
-      setTimeout(() => { window.location.href = '/login'; }, 1000);
-    } catch (err) {
-      this.showAlert(err.message || 'Registration processing error', 'danger');
-      btn.disabled = false;
-      btn.textContent = originalText;
-    }
-  },
-
-  /**
-   * Display a status banner or alert message on the page
-   */
   showAlert(message, type = 'danger', containerId = 'alert-container') {
     const container = document.getElementById(containerId);
     if (!container) return;
-
     container.className = `alert alert-${type} animate-slide-down`;
     container.textContent = message;
     container.style.display = 'block';
-
     setTimeout(() => { container.style.display = 'none'; }, 4000);
   },
 
-  /**
-   * Universal API fetch wrapper
-   */
   async apiRequest(url, options = {}) {
-    // 1. Grab the token from storage
     const token = localStorage.getItem('access_token'); 
     
-    // 2. Inject the Authorization header if the token exists
-    const defaultHeaders = { 
-      'Content-Type': 'application/json', 
+    const headers = Object.assign({
       'Accept': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}) 
-    };
-    
-    const config = { ...options, headers: { ...defaultHeaders, ...options.headers } };
+      'X-Requested-With': 'XMLHttpRequest'
+    }, options.headers || {});
 
-    if (config.body && typeof config.body === 'object') {
-      config.body = JSON.stringify(config.body);
+    if (token && token !== 'undefined') {
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(url, config);
-    const data = await response.json().catch(() => ({}));
+    let body = options.body;
+    if (body && typeof body === 'object' && !(body instanceof FormData)) {
+      body = JSON.stringify(body);
+      if (!headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+      }
+    }
 
-    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
-    return data;
+    const config = { 
+      ...options, 
+      headers: headers,
+      body: body,
+      credentials: options.credentials || 'include',
+      redirect: 'manual'
+    };
+
+    try {
+      const response = await fetch(url, config);
+
+      if (response.status === 0 || response.type === 'opaqueredirect') {
+        this.showSessionExpiredOverlay();
+        localStorage.removeItem('access_token');
+        throw new Error('Cloud Shell session expired. Please refresh your browser.');
+      }
+
+      const isJson = response.headers.get('content-type')?.includes('application/json');
+      const data = isJson ? await response.json() : await response.text();
+
+      if (!response.ok) throw new Error(data.error || data || `HTTP ${response.status}`);
+      return data;
+    } catch (error) {
+      if (error.message.includes('Cloud Shell session expired')) {
+        this.showSessionExpiredOverlay();
+      } else {
+        console.error('API Request failed:', error);
+      }
+      throw error;
+    }
+  },
+
+  showSessionExpiredOverlay() {
+    if (document.getElementById('cloud-shell-expired-overlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'cloud-shell-expired-overlay';
+    Object.assign(overlay.style, {
+      position: 'fixed', inset: '0', zIndex: '99999',
+      backgroundColor: 'rgba(15, 23, 42, 0.98)', color: '#fff',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      textAlign: 'center', padding: '2rem', backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)'
+    });
+
+    overlay.innerHTML = `
+      <div style="max-width: 480px; font-family: system-ui, -apple-system, sans-serif;">
+        <div style="font-size: 5rem; color: #f59e0b; margin-bottom: 1.5rem;">⚠️</div>
+        <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem; color: #fff;">Environment Session Expired</h2>
+        <p style="font-size: 1.1rem; color: #94a3b8; margin-bottom: 2.0rem; line-height: 1.6;">
+          Your Google Cloud Shell preview session has timed out. If refreshing doesn't work, please close this tab and click "Web Preview" again from the Cloud Shell terminal.
+        </p>
+        <button onclick="window.location.href = window.location.origin" style="background: #3b82f6; color: white; border: none; padding: 1rem 2.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; font-size: 1.1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">Refresh Session</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
   },
 
   closeModal(modalId) {
@@ -558,10 +439,8 @@ window.SparkMarg = {
   }
 };
 
-document.addEventListener('DOMContentLoaded', () => { 
+document.addEventListener('DOMContentLoaded', async () => { 
   window.SparkMarg.init();
-
-  // FAQ Search Filter Logic
   const faqSearch = document.getElementById('faq-search');
   if (faqSearch) {
     faqSearch.addEventListener('input', (e) => {

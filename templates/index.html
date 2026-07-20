@@ -1,388 +1,300 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SparkMarg - Active Career Simulation Engine</title>
-  
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.css" integrity="sha512-fzJke8xUCPckf6D3vvPcXdIRhcRZORh0+PxSElFI6Ym6G+IiwQiCurZTu0l7tNPvHVZk0wf7tRu0+ip6h+RrVA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  
-  <!-- Core & Animation Stylesheets -->
-  <link rel="stylesheet" href="/static/css/style.css">
-  <link rel="stylesheet" href="/static/css/animations.css">
-  <link rel="stylesheet" href="/static/css/responsive.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SparkMarg — Interactive Career Path Simulator</title>
+    <meta name="description" content="Simulate real-world engineering and tech career scenarios. Experience day-to-day decisions, evaluate impact, and master industry skills.">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Glassmorphic Design System Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/catalog.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/simulation.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
 </head>
 <body>
-  <!-- Flash/Alert Container -->
-  <div id="alert-container" class="alert-container"></div>
+    <!-- Persistent Ambient Glow Backdrops -->
+    <div class="glow-orb orb-primary" aria-hidden="true"></div>
+    <div class="glow-orb orb-secondary" aria-hidden="true"></div>
 
-  <a href="#main-content" class="skip-link">Skip to content</a>
-  <header class="site-header">
-    <div class="nav-container">
-      <a href="/" class="nav-brand">
-        <span class="brand-spark">Spark</span><span class="brand-marg">Marg</span>
-      </a>
-      
-      <nav class="nav-links" id="navMenu">
-        <a href="javascript:void(0)" onclick="window.SparkMarg.navigateTo('home')" class="nav-link nav-item active">Menu</a>
-        <a href="javascript:void(0)" onclick="window.SparkMarg.navigateTo('features')" class="nav-link nav-item">Features</a>
-        <a href="javascript:void(0)" onclick="window.SparkMarg.navigateTo('temp')" class="nav-link nav-item">temp</a>
-        <a href="javascript:void(0)" onclick="window.SparkMarg.navigateTo('catalog')" class="nav-link nav-item">Catalog</a>
-        <a href="javascript:void(0)" onclick="window.SparkMarg.navigateTo('dashboard')" class="nav-link nav-item">Dashboard</a>
-        <a href="javascript:void(0)" onclick="window.SparkMarg.navigateTo('pricing')" class="nav-link nav-item">Pricing</a>
-        <a href="javascript:void(0)" onclick="window.SparkMarg.navigateTo('faq')" class="nav-link nav-item">FAQ</a>
-        <a href="javascript:void(0)" onclick="window.SparkMarg.showAlert('Contact system is currently offline', 'info')" class="nav-link nav-item">Contact</a>
-        <!-- User Authentication & Profile State -->
-        <div class="nav-actions">
-          <!-- Unauthenticated State -->
-          <div class="nav-auth" id="navAuthSection">
-            <button id="themeToggle" class="theme-switcher" aria-label="Toggle Dark Mode" title="Toggle Theme"><i class="fa-solid fa-moon"></i></button>
-            <button id="login-btn" class="btn btn-outline btn-sm" onclick="window.SparkMarg.navigateTo('loginModal');">Login</button>
-            <button id="signup-btn" class="btn btn-primary btn-sm" onclick="window.SparkMarg.navigateTo('signupModal');">Sign Up</button>
-          </div> 
+    <!-- Dynamic Toast Notification Container -->
+    <div id="alert-container" class="alert-container" aria-live="polite"></div>
 
-          <!-- Authenticated State -->
-          <div class="user-profile-menu hidden" id="userProfileMenu">
-            <div class="profile-avatar" id="profileAvatar" onclick="window.SparkMarg.toggleProfileMenu();" role="button" aria-haspopup="true" aria-expanded="false" aria-label="Toggle user menu">U</div>
-            <div class="profile-dropdown hidden" id="dropDownMenu" role="menu"> 
-              <span id="user-name" class="dropdown-item">Username</span>
-              <button class="dropdown-item" onclick="window.SparkMarg.showAlert('Profile editing coming soon', 'info')">Edit Profile</button>
-              <div class="divider"></div>
-              <button id="logout-btn" class="dropdown-item" onclick="window.SparkMarg.logout();"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <!-- Navigation Header -->
+    <header class="navbar-wrapper">
+        <nav class="nav-container glass">
+            <a href="#" class="brand-logo" id="nav-brand">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">Spark<span class="logo-highlight">Marg</span></span>
+            </a>
 
-      <button class="hamburger" id="hamburgerToggle" aria-label="Toggle navigation menu" aria-expanded="false">
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
-      </button>
-    </div>
-  </header>
-
-  <!-- Main Content Wrapper -->
-  <main class="main-content" id="main-content">
-    <div id="page-home" class="page-view active">
-      <div class="container catalog-container text-center">
-        <section id="hive" class="hero-section text-center fade-in">
-          <div class="hero-content reveal max-w-2xl mx-auto">
-            <span class="hero-badge">AI-Powered Simulation Engine</span>
-            <h1 class="hero-headline fw-bold">Discover Your Career Paths</h1>
-            <p class="hero-subheadline text-muted mt-2">
-              Explore careers through immersive simulations & AI-powered guidance. Master high-stakes decisions and technical execution in a zero-risk sandbox.
-            </p>
-            <div class="hero-cta-group mt-4 d-flex justify-content-center gap-3">
-              <a href="javascript:void(0)" onclick="window.SparkMarg.navigateTo('features')" class="btn btn-primary px-4 py-2 hover-lift"><i class="fa-solid fa-rocket"></i> Start Exploring</a>
-            </div>
-          </div>
-        </section>
-      </div>
-    </div>
-
-    <div id="page-features" class="page-view">
-      <div class="container catalog-container">
-        <section id="features" class="mt-5">
-          <div class="section-header mb-5 text-center">
-            <h2 class="text-white fw-bold">Platform Capabilities</h2>
-            <p class="text-muted">A comprehensive suite of tools designed to accelerate your career growth.</p>
-          </div>
-          <div class="grid grid-3">
-            <!-- Feature cards are grouped here... -->
-            <!-- Feature Item 1 -->
-            <div class="card simulation-catalog-card hover-lift slide-up delay-1">
-              <div class="catalog-card-header">
-                <i class="fa-solid fa-code-branch feature-icon text-primary mb-3" style="font-size: 1.5rem;"></i>
-                <span class="catalog-card-domain text-primary">Interactive Playbooks</span>
-              </div>
-              <div>
-                <h3 class="catalog-card-title text-white">Branching Architecture</h3>
-                <p class="catalog-card-desc text-muted">
-                  Every selection adapts the underlying track timeline. Navigate production rollbacks, resource balancing, and high-stakes cross-functional diplomacy.
-                </p>
-              </div>
+            <div class="nav-links" id="nav-menu">
+                <a href="#home" class="nav-link active" data-page="home">Home</a>
+                <a href="#catalog" class="nav-link" data-page="catalog">Simulations</a>
+                <a href="#dashboard" class="nav-link" data-page="dashboard" id="nav-link-dashboard" style="display: none;">Command Center</a>
             </div>
 
-            <!-- Feature Item 2 -->
-            <div class="card simulation-catalog-card hover-lift slide-up delay-2">
-              <div class="catalog-card-header">
-                <i class="fa-solid fa-chart-line feature-icon text-success mb-3" style="font-size: 1.5rem;"></i>
-                <span class="catalog-card-domain text-success">Quantified Evaluation</span>
-              </div>
-              <div>
-                <h3 class="catalog-card-title text-white">Competency Profiling</h3>
-                <p class="catalog-card-desc text-muted">
-                  Your choices programmatically alter your core capabilities across Technical Execution, Leadership, Problem Solving, and Strategic Communication.
-                </p>
-              </div>
+            <div class="nav-actions">
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle-btn" class="btn-icon" aria-label="Toggle Color Theme" title="Toggle Theme">
+                    <span class="theme-icon-dark">🌙</span>
+                    <span class="theme-icon-light" style="display: none;">☀️</span>
+                </button>
+
+                <!-- Unauthenticated State -->
+                <div id="auth-actions-logged-out" class="nav-auth">
+                    <button id="btn-open-login" class="btn btn-ghost btn-sm">Log In</button>
+                    <button id="btn-open-register" class="btn btn-primary btn-sm">Get Started</button>
+                </div>
+
+                <!-- Authenticated Profile State -->
+                <div id="auth-actions-logged-in" class="user-profile-menu" style="display: none;">
+                    <button id="profile-dropdown-trigger" class="btn btn-ghost btn-sm user-badge-btn">
+                        <span class="avatar-circle" id="user-avatar-initials">U</span>
+                        <span class="user-name-label" id="user-display-name">User</span>
+                        <span class="chevron-icon">▾</span>
+                    </button>
+                    <div id="profile-dropdown" class="profile-dropdown glass dropdown-hidden">
+                        <div class="dropdown-header">
+                            <p class="dropdown-user-email" id="user-display-email">user@example.com</p>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#dashboard" class="dropdown-item" data-page="dashboard">Dashboard</a>
+                        <button id="btn-logout" class="dropdown-item text-danger">Log Out</button>
+                    </div>
+                </div>
+
+                <!-- Mobile Navigation Hamburger -->
+                <button id="hamburger-btn" class="hamburger" aria-label="Toggle Navigation Menu">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
             </div>
-
-            <!-- Feature Item 3 -->
-            <div class="card simulation-catalog-card hover-lift slide-up delay-3">
-              <div class="catalog-card-header">
-                <i class="fa-solid fa-terminal feature-icon text-primary mb-3" style="font-size: 1.5rem;"></i>
-                <span class="catalog-card-domain text-primary">Zero Risk Sandbox</span>
-              </div>
-              <div>
-                <h3 class="catalog-card-title text-white">Real Environments</h3>
-                <p class="catalog-card-desc text-muted">
-                  Encounter realistic system breakdowns, edge cases, and architectural reviews designed specifically from real tech workflows.
-                </p>
-              </div>
-            </div>
-
-            <!-- Feature Item 4 -->
-            <div class="card simulation-catalog-card hover-lift slide-up delay-4">
-              <div class="catalog-card-header">
-                <i class="fa-solid fa-robot feature-icon text-success mb-3" style="font-size: 1.5rem;"></i>
-                <span class="catalog-card-domain text-success">AI Mentorship</span>
-              </div>
-              <div>
-                <h3 class="catalog-card-title text-white">Adaptive Guidance</h3>
-                <p class="catalog-card-desc text-muted">
-                  Get real-time feedback and trajectory adjustments based on your simulation performance from our integrated AI engine.
-                </p>
-              </div>
-            </div>
-
-            <!-- Feature Item 5 -->
-            <div class="card simulation-catalog-card hover-lift slide-up delay-5">
-              <div class="catalog-card-header">
-                <i class="fa-solid fa-award feature-icon text-primary mb-3" style="font-size: 1.5rem;"></i>
-                <span class="catalog-card-domain text-primary">Skill Verification</span>
-              </div>
-              <div>
-                <h3 class="catalog-card-title text-white">Verified Credentials</h3>
-                <p class="catalog-card-desc text-muted">
-                  Export your simulation results as proof of competency for real-world career advancements and technical interviews.
-                </p>
-              </div>
-            </div>
-
-            <!-- Feature Item 6 -->
-            <div class="card simulation-catalog-card hover-lift slide-up delay-6">
-              <div class="catalog-card-header">
-                <i class="fa-solid fa-route feature-icon text-success mb-3" style="font-size: 1.5rem;"></i>
-                <span class="catalog-card-domain text-success">Trajectory Planning</span>
-              </div>
-              <div>
-                <h3 class="catalog-card-title text-white">Career Path Mapping</h3>
-                <p class="catalog-card-desc text-muted">
-                  Visualize how different decisions lead to varied long-term career outcomes and senior leadership roles in tech.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-    </div>
-
-    <div id="page-temp" class="page-view"></div>
-    <div id="page-catalog" class="page-view"></div>
-    <div id="page-dashboard" class="page-view"></div>
-    <div id="page-simulation" class="page-view"></div>
-
-    <div id="page-pricing" class="page-view">
-      <div class="container catalog-container text-center">
-        <section id="pricing" class="mt-5 fade-in">
-          <h2 class="text-white fw-bold">Subscription Tiers</h2>
-          <div class="grid grid-3">
-            <!-- Pricing tier content... -->
-            <!-- Starter Tier -->
-            <div class="card pricing-card hover-lift">
-              <div class="pricing-content">
-                <h3 class="pricing-title">Starter Core</h3>
-                <div class="pricing-price">₹0<span class="price-duration">/month</span></div>
-                <ul class="pricing-features">
-                  <li><i class="fa-solid fa-check text-success"></i> Standard Career Tracks</li>
-                  <li><i class="fa-solid fa-check text-success"></i> Community Hub Access</li>
-                  <li><i class="fa-solid fa-check text-success"></i> Basic Skill Profiling</li>
-                </ul>
-              </div>
-              <button class="btn btn-outline btn-block" onclick="window.SparkMarg.navigateTo('signupModal')">Provision Free Account</button>
-            </div>
-
-            <!-- Business/Professional Tier -->
-            <div class="card pricing-card pricing-card-featured hover-lift">
-              <div class="pricing-badge">Most Preferred</div>
-              <div class="pricing-content">
-                <h3 class="pricing-title">Professional</h3>
-                <div class="pricing-price">₹599<span class="price-duration">/month</span></div>
-                <ul class="pricing-features">
-                  <li><i class="fa-solid fa-check text-success"></i> Expert Level Simulations</li>
-                  <li><i class="fa-solid fa-check text-success"></i> AI-Powered Feedback</li>
-                  <li><i class="fa-solid fa-check text-success"></i> Verified Skill Credentials</li>
-                  <li><i class="fa-solid fa-check text-success"></i> Custom Analytics Docking</li>
-                </ul>
-              </div>
-              <button class="btn btn-primary btn-block" onclick="window.SparkMarg.showAlert('Professional tier deployment coming soon', 'info')">Deploy Pro Node</button>
-            </div>
-
-            <!-- Enterprise Tier -->
-            <div class="card pricing-card hover-lift">
-              <div class="pricing-content">
-                <h3 class="pricing-title">Enterprise</h3>
-                <div class="pricing-price">Custom</div>
-                <ul class="pricing-features">
-                  <li><i class="fa-solid fa-check text-success"></i> Isolated Tenant Clusters</li>
-                  <li><i class="fa-solid fa-check text-success"></i> Bespoke Simulation Mapping</li>
-                  <li><i class="fa-solid fa-check text-success"></i> Dedicated Career Architects</li>
-                  <li><i class="fa-solid fa-check text-success"></i> Full Security Audits</li>
-                </ul>
-              </div>
-              <button class="btn btn-primary btn-block" onclick="window.SparkMarg.showAlert('Contacting system architects...', 'info')">Contact Architecture Team</button>
-            </div>
-          </div>
-        </section>
-      </div>
-    </div>
-
-    <div id="page-faq" class="page-view">
-      <div class="container catalog-container">
-        <section id="faq" class="mt-5 fade-in">
-          <h2 class="text-white fw-bold text-center">Frequently Asked Questions</h2>
-          <div class="faq-container" style="max-width: 800px; margin: 0 auto;">
-            <!-- FAQ items... -->
-            <div class="faq-item card mb-3">
-              <div class="faq-trigger p-4 d-flex justify-content-between align-items-center" role="button" aria-expanded="false">
-                <span class="faq-question fw-semibold">What is the SparkMarg Simulation Engine?</span>
-                <span class="faq-icon"><i class="fa-solid fa-chevron-down"></i></span>
-              </div>
-              <div class="faq-panel px-4">
-                <p class="text-muted pb-4">SparkMarg is an immersive platform designed to simulate real-world technical and leadership scenarios. It allows professionals to build skills in a zero-risk environment through branching narrative tracks.</p>
-              </div>
-            </div>
-
-            <div class="faq-item card mb-3">
-              <div class="faq-trigger p-4 d-flex justify-content-between align-items-center" role="button" aria-expanded="false">
-                <span class="faq-question fw-semibold">How are my competency scores calculated?</span>
-                <span class="faq-icon"><i class="fa-solid fa-chevron-down"></i></span>
-              </div>
-              <div class="faq-panel px-4">
-                <p class="text-muted pb-4">Each decision you make within a simulation has weighted impacts on four core vectors: Leadership, Technical Execution, Problem Solving, and Strategic Communication. These are aggregated to build your professional profile.</p>
-              </div>
-            </div>
-
-            <div class="faq-item card mb-3">
-              <div class="faq-trigger p-4 d-flex justify-content-between align-items-center" role="button" aria-expanded="false">
-                <span class="faq-question fw-semibold">Can I resume a simulation later?</span>
-                <span class="faq-icon"><i class="fa-solid fa-chevron-down"></i></span>
-              </div>
-              <div class="faq-panel px-4">
-                <p class="text-muted pb-4">Yes! SparkMarg automatically saves your progress at every node. You can find your active runs in the Dashboard and resume them at any time.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="help-footer mt-5">
-            <p class="text-muted">Still have questions? Our support team is here to help.</p>
-            <button class="btn btn-secondary mt-3 px-5 py-2" onclick="window.SparkMarg.showAlert('Support system initializing...', 'success')">Contact Strategic Support</button>
-          </div>
-        </section>
-      </div>
-    </div>
-    <!--
-    <div id="page-contact" class="page-view">
-      <div class="container catalog-container text-center">
-        <section id="contact" class="mt-5 fade-in">
-          <h2 class="text-white fw-bold">Contact Strategic Support</h2>
-          <div class="card p-5 max-w-2xl mx-auto mt-4">
-            <p class="text-muted">Contact system is currently offline. Please use our community hub.</p>
-          </div>
-
-          
-        </section>
-      </div>
-    </div>
-    -->
-  </main>
-
-  <!-- User Authentication: Login -->
-  <div class="modal-overlay hidden" id="loginModal" onclick="window.SparkMarg.handleModalOutSideClick(event, 'loginModal')" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
-    <div class="modal-box" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <h3 id="loginModalTitle">Login to SparkMarg</h3>
-        <button type="button" class="modal-close" onclick="window.SparkMarg.closeModal('loginModal')" aria-label="Close Login Modal"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form id="login-form" class="modal-body">
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" class="form-control" placeholder="name@domain.com" required autocomplete="email">
-        </div>
-        <div class="form-group">
-          <label for="password">Security Password</label>
-          <input type="password" id="password" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
-        </div>
-        <div id="login-error" class="error-msg-block hidden"></div>
-        <button type="submit" class="btn btn-primary btn-block">Authenticate Account</button>
-        <div class="text-center mt-4">
-          <span>Don't have an account? </span>
-          <button type="button" class="btn-link" onclick="window.SparkMarg.switchModal('signupModal', 'loginModal')">Sign up here</button>
-        </div>
-      </form>
-    </div>
-  </div>
-  
-  <!-- User Authentication: Signup -->
-  <div class="modal-overlay hidden" id="signupModal" onclick="window.SparkMarg.handleModalOutSideClick(event, 'signupModal')" role="dialog" aria-modal="true" aria-labelledby="signupModalTitle">
-    <div class="modal-box" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <h3 id="signupModalTitle">Create Account</h3>
-        <button type="button" class="modal-close" onclick="window.SparkMarg.closeModal('signupModal')" aria-label="Close Signup Modal"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form id="register-form" class="modal-body">
-        <div class="form-group">
-          <label for="username">Full Name</label>
-          <input type="text" id="username" name="fullname" class="form-control" placeholder="Enter Full Name" required autocomplete="name">
-        </div>
-        <div class="form-group">
-          <label for="reg-email">Email Address</label>
-          <input type="email" id="reg-email" class="form-control" placeholder="username@domain.com" required autocomplete="email">
-        </div>
-        <div class="form-group">
-          <label for="reg-password">Password</label>
-          <input type="password" name="password" class="form-control" placeholder="Create Secure Password" required autocomplete="new-password">
-        </div>
-        <div class="form-group">
-          <label for="confirm-password">Confirm Password</label>
-          <input type="password" id="confirm-password" name="confirm_password" class="form-control" placeholder="Confirm Password" required autocomplete="new-password">
-        </div>
-        <div id="reg-error" class="error-msg-block hidden"></div>
-        <button type="submit" class="btn btn-primary btn-block">Sign Up</button>
-        <div class="text-center mt-4">
-          <span>Already have an account? </span>
-          <button type="button" class="btn-link" onclick="window.SparkMarg.switchModal('loginModal', 'signupModal')">Login here</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Global Footer -->
-  <footer class="footer">
-    <div class="footer-container">
-      <div class="footer-content">
-        <h6 class="footer-title">SparkMarg Technologies Inc.</h6>
-        <p class="footer-copy"><i class="fa-regular fa-copyright"></i> 2026 SparkMarg. All core operational rights reserved.</p>
-        <nav class="footer-links" aria-label="Legal Information">
-          <a href="javascript:void(0)" onclick="window.SparkMarg.showAlert('Activating Privacy Policy...', 'info')">Privacy Policy</a>
-          <a href="javascript:void(0)" onclick="window.SparkMarg.showAlert('Activating Terms of Service...', 'info')">Terms of Service</a>
         </nav>
-        <div class="footer-socials">
-          <a href="https://github.com/Somansh25/" target="_blank" class="social-icon" title="GitHub" aria-label="Visit our GitHub" onclick="window.SparkMarg.showAlert('Redirecting to GitHub Profile...', 'info')"><i class="fa-brands fa-github"></i></a>
-          <a href="https://www.linkedin.com/in/somanshchauhan/" target="_blank" class="social-icon" title="LinkedIn" aria-label="Visit our LinkedIn" onclick="window.SparkMarg.showAlert('Redirecting to LinkedIn Profile...', 'info')"><i class="fa-brands fa-linkedin"></i></a>
+    </header>
+
+    <!-- Main Single Page Application Host Container -->
+    <main id="app-content" class="main-content">
+        
+        <!-- SECTION 1: LANDING & HERO (#page-home) -->
+        <section id="page-home" class="spa-page active">
+            <div class="container hero-section">
+                <div class="hero-badge fade-in">
+                    <span class="badge-dot"></span> Next-Gen Career Readiness Platform
+                </div>
+                <h1 class="hero-headline fade-in delay-1">
+                    Simulate Your Future in <span class="gradient-text">Engineering & Tech</span>
+                </h1>
+                <p class="hero-subtext fade-in delay-2">
+                    Step into real-world industry scenarios. Test your critical thinking, execute strategic trade-offs, and master core competencies before applying to your dream role.
+                </p>
+                <div class="hero-cta-group fade-in delay-3">
+                    <a href="#catalog" class="btn btn-primary btn-lg" data-page="catalog">Explore Simulations</a>
+                    <button id="hero-btn-demo" class="btn btn-secondary btn-lg">Watch Quick Demo</button>
+                </div>
+            </div>
+
+            <!-- Features Showcase Grid -->
+            <div class="container section-padding">
+                <div class="section-header text-center">
+                    <h2 class="section-title">Why Practice With SparkMarg?</h2>
+                    <p class="section-subtitle">Experience real scenarios without real-world consequences.</p>
+                </div>
+                <div class="grid grid-3">
+                    <div class="card glass hover-lift">
+                        <div class="feature-icon">🎯</div>
+                        <h3 class="card-title">Scenario-Based Learning</h3>
+                        <p class="card-description">Solve authentic technical and managerial bottlenecks curated by enterprise industry leads.</p>
+                    </div>
+                    <div class="card glass hover-lift">
+                        <div class="feature-icon">📊</div>
+                        <h3 class="card-title">Granular Analytics</h3>
+                        <p class="card-description">Receive immediate metric scorecards evaluate skills across architectural design, trade-off optimization, and risk management.</p>
+                    </div>
+                    <div class="card glass hover-lift">
+                        <div class="feature-icon">🚀</div>
+                        <h3 class="card-title">Portfolio Evidence</h3>
+                        <p class="card-description">Demonstrate practical decision-making track records to recruiters with validated simulation milestones.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: SIMULATION CATALOG (#page-catalog) -->
+        <section id="page-catalog" class="spa-page">
+            <div class="container catalog-container">
+                <div class="catalog-hero">
+                    <h1 class="catalog-title">Simulation Catalog</h1>
+                    <p class="catalog-subtitle">Select an interactive career sandbox to initiate your session.</p>
+                </div>
+
+                <div class="catalog-controls">
+                    <div class="search-wrapper">
+                        <input type="text" id="catalog-search" class="input-control" placeholder="Search simulations by keyword or tech stack...">
+                    </div>
+                </div>
+
+                <div class="filter-pills-container" id="domain-filters">
+                    <button class="domain-pill active" data-domain="ALL">All Domains</button>
+                    <button class="domain-pill" data-domain="AIML">AI & Machine Learning</button>
+                    <button class="domain-pill" data-domain="SYSTEMS">System Architecture</button>
+                    <button class="domain-pill" data-domain="DEVOPS">DevOps & Cloud</button>
+                    <button class="domain-pill" data-domain="FULLSTACK">Fullstack Engineering</button>
+                </div>
+
+                <!-- Dynamic Catalog Grid Insertion Host -->
+                <div id="catalog-grid" class="grid grid-3">
+                    <div class="loading-spinner-container">
+                        <div class="spinner"></div>
+                        <p>Loading available simulations...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: USER COMMAND CENTER / DASHBOARD (#page-dashboard) -->
+        <section id="page-dashboard" class="spa-page">
+            <div class="container dashboard-container">
+                <div class="dashboard-header">
+                    <h1 class="dashboard-title">Command Center</h1>
+                    <p class="dashboard-subtitle">Track competency growth, simulation history, and skill scorecards.</p>
+                </div>
+
+                <div class="grid-dashboard">
+                    <!-- Left Column: Metrics & Competencies -->
+                    <div class="dashboard-sidebar">
+                        <div class="stats-card">
+                            <div class="stat-block">
+                                <span class="stat-number" id="dash-stat-completed">0</span>
+                                <span class="stat-label">Completed</span>
+                            </div>
+                            <div class="stat-divider"></div>
+                            <div class="stat-block">
+                                <span class="stat-number" id="dash-stat-score">0%</span>
+                                <span class="stat-label">Avg Accuracy</span>
+                            </div>
+                        </div>
+
+                        <div class="skills-card">
+                            <h3 class="card-subtitle">Skill Competencies</h3>
+                            <div id="dash-skills-list" class="skills-list">
+                                <p class="text-muted text-sm">Complete simulations to populate your competency matrix.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Activity Stream -->
+                    <div class="dashboard-main">
+                        <div class="tracker-section">
+                            <h2 class="section-heading"><span class="section-icon">📈</span> Active & Recent Runs</h2>
+                            <div id="dash-history-list" class="history-list">
+                                <div class="loading-spinner-container">
+                                    <div class="spinner"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: INTERACTIVE SIMULATION SANDBOX PLAYER (#page-simulation) -->
+        <section id="page-simulation" class="spa-page">
+            <div class="container simulation-container">
+                <div class="simulation-header">
+                    <div>
+                        <a href="#catalog" class="exit-link" data-page="catalog">← Exit Simulation</a>
+                        <h1 id="sim-active-title" class="dashboard-title">Loading Simulation...</h1>
+                    </div>
+                    <div id="sim-active-domain" class="badge-medium">DOMAIN</div>
+                </div>
+
+                <div id="sim-interactive-card" class="simulation-card">
+                    <div class="loading-spinner-container">
+                        <div class="spinner"></div>
+                        <p>Initializing sandbox environment...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- AUTHENTICATION MODAL DIALOG -->
+    <div id="auth-modal" class="modal-overlay" aria-hidden="true">
+        <div class="modal-box glass">
+            <div class="modal-header">
+                <h3 id="modal-title" class="modal-title">Sign In to SparkMarg</h3>
+                <button id="modal-close-btn" class="modal-close" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Auth Tabs Switcher -->
+                <div class="auth-tabs">
+                    <button id="tab-login" class="auth-tab active">Log In</button>
+                    <button id="tab-register" class="auth-tab">Create Account</button>
+                </div>
+
+                <!-- LOGIN FORM -->
+                <form id="form-login" class="auth-form">
+                    <div class="form-group">
+                        <label for="login-email" class="form-label">Email Address</label>
+                        <input type="email" id="login-email" class="input-control" required placeholder="name@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password" class="form-label">Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="login-password" class="input-control" required placeholder="••••••••">
+                            <span class="password-toggle" title="Toggle Visibility">👁️</span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+                </form>
+
+                <!-- REGISTER FORM -->
+                <form id="form-register" class="auth-form" style="display: none;">
+                    <div class="form-group">
+                        <label for="reg-name" class="form-label">Full Name</label>
+                        <input type="text" id="reg-name" class="input-control" required placeholder="Somansh Chauhan">
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-email" class="form-label">Email Address</label>
+                        <input type="email" id="reg-email" class="input-control" required placeholder="name@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-password" class="form-label">Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="reg-password" class="input-control" required placeholder="••••••••">
+                            <span class="password-toggle" title="Toggle Visibility">👁️</span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+                </form>
+            </div>
         </div>
-      </div>
     </div>
-  </footer>
 
-  <!-- External Script Setup Stack -->
-  <script src="/static/js/main.js"></script>
+    <!-- FOOTER SECTION -->
+    <footer class="footer">
+        <div class="container footer-container">
+            <p>&copy; 2026 SparkMarg. Built for practical career simulation.</p>
+            <div class="footer-links">
+                <a href="#home" data-page="home">Home</a>
+                <a href="#catalog" data-page="catalog">Catalog</a>
+                <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </footer>
 
-  <div id="globalFloatingWidget" class="hidden"></div>
+    <!-- Core Controller JavaScript Application Bundle -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
